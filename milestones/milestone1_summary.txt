@@ -1,0 +1,69 @@
+MILESTONE 1 SUMMARY
+===================
+
+Objective
+---------
+Build a working Python scraper for Georgia Tech's calendar (https://calendar.gatech.edu/) 
+that extracts and prints structured event data to the terminal.
+
+What Was Accomplished
+---------------------
+
+1. Scraper Implementation (scraper/gt_calendar_scraper.py)
+   - Downloads the calendar page HTML using the requests library
+   - Identifies and extracts the embedded drupalSettings JSON object from the page source
+   - Parses the FullCalendar.js event data (no browser automation needed—events are 
+     server-rendered as JSON)
+   - Extracts 5 key fields from each event:
+     * name
+     * start (date/time)
+     * location
+     * description
+     * categories
+
+2. Event Parsing
+   - Handles embedded HTML snippets within event data using BeautifulSoup
+   - Extracts event name from <h3> tags
+   - Extracts description from event wrapper structure
+   - Detects location using font-awesome map-marker icon as anchor
+   - Extracts category tags from event-categories divs
+   - Reconstructs full event URLs for reference
+   - Handles Unicode characters properly for Windows terminal display (UTF-8 encoding)
+
+3. Output Format
+   - Prints all discovered events to the terminal in a readable, labeled format
+   - For each event, displays:
+     * Event number and name
+     * Date/time (When)
+     * Location (Where)
+     * Categories
+     * Description (Details)
+     * Event link (Link)
+   - Well-commented code explaining the approach and implementation details throughout
+
+Technical Approach
+------------------
+- Used direct JSON extraction instead of browser automation (simpler, faster, more reliable)
+- Leveraged Drupal's server-side rendering of event data
+- No need for Selenium, Playwright, or other headless browser tools
+- Handled encoding issues for cross-platform compatibility (Windows Terminal UTF-8)
+- Added User-Agent header to avoid server rejection
+
+Key Files
+---------
+- scraper/gt_calendar_scraper.py: Main scraper implementation
+- requirements.txt: Python dependencies (requests, BeautifulSoup4)
+- events_output.txt: Sample output from running the scraper
+
+Status
+------
+Complete and working. The scraper successfully:
+✓ Fetches the GT calendar page
+✓ Parses embedded event data
+✓ Extracts structured event information
+✓ Prints results in readable format
+
+Next Phase
+----------
+Integration with Google Gemini API to categorize events with LLM parsing,
+then Firebase database storage, followed by React frontend with Google Maps.
