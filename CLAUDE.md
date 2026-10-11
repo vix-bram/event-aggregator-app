@@ -45,7 +45,6 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 
 ## Build Approach
 
-* The developer is new to software development, so code should be well-commented and easy to understand
 * Start simple: get one scraper working, then add LLM parsing, then the database, then the frontend
 * Prioritize a working prototype over a polished product
 * Each component should be buildable and testable independently before integrating
