@@ -1,7 +1,8 @@
-### Application for Aggregating Events on College Campuses
+### Application for Finding Events on College Campus (Georgia Tech): *Name*
 
-In this project, we are building an application that can be downloaded on a mobile phone to check what events are happening on a college campus.
-It allows for filtering based on the type of event, time of event, whether one needs to sign up, whether there are items being handed out, etc.
-What separates our application from other applications is that it scrapes event information from several web pages that students would otherwise
-need to periodically check. With our application, one can check at any time whether any events are going on around them without needing to search
-through their emails, group chats, web pages, etc.
+In this project, I am building a web application to check what events are happening on Georgia Tech's campus. The purpose of
+the app is to help students find events more easily be more involved in campus social life. 
+How the app works is that it scrapes event information from several web pages and displays them neatly on a map. It allows for
+filtering based on the type of event, time of event, whether one needs to sign up, whether there's food, etc. When I was a Tech student, I missed out on many events because I felt like there were too many places to look for them. Additionally, I could not see the events on a map and filter based on several criteria.
+
+Initially, the app is being built for finding events on Georgia Tech's campus. The goal is to eventually expand the app to several college campuses across the nation and make finding events easier for student!
