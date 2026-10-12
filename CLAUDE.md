@@ -66,7 +66,7 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 1. Scraper also writes `events.json` (UTF-8, HTML entities unescaped, category names trimmed, `all_day` flag for midnight starts)
 2. `data/gt_buildings.json`: ~15–20 buildings with keywords and lat/lng (coordinates taken by hand from Google Maps)
 3. `locate.py`: matches each event's location to a building, marks Online/Virtual/TBD as unmappable, prints a match-rate summary
-4. Google Maps JavaScript API key, restricted to localhost (a browser key is visible in the page, so the restriction is what protects it)
+4. Google Maps JavaScript API key, restricted to localhost (a browser key is visible in the page, so the restriction is what protects it). The key goes in `config.js` (gitignored); `config.example.js` is the committed template
 5. `map.html`: plain HTML page that loads `events.json` and shows pins with popups (open it via `python -m http.server`, since browsers block loading local files from `file://`)
 
 **After that:** time filter and color-coded pins; then decide (rules vs. LLM) for unmatched locations and the free-food tag; then Firebase storage; then more sources.

@@ -14,6 +14,9 @@ What this script does, step by step:
    card). We parse that mini-HTML with BeautifulSoup to pull out clean
    fields: name, date/time, location, description, and category tags.
 5. We print every event we found to the terminal in a readable format.
+6. (Milestone 2) We also save every event to events.json in the project
+   root, so the next scripts (locate.py, map.html) can read structured
+   data instead of terminal text.
 
 Why this approach instead of Playwright/browser automation:
 The event data is server-rendered into the page as JSON, so a simple HTTP
@@ -23,9 +26,11 @@ events are fetched via a separate AJAX call instead, we'd switch to
 Playwright then — but for now, this is simpler and more reliable.
 """
 
+import html
 import json
 import re
 import sys
+from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
@@ -39,6 +44,11 @@ from bs4 import BeautifulSoup
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 CALENDAR_URL = "https://calendar.gatech.edu/"
+
+# Where the structured output goes: <project root>/events.json.
+# Path(__file__) is this script's own location (scraper/), so .parent.parent
+# is the project root no matter which folder you run the script from.
+OUTPUT_PATH = Path(__file__).resolve().parent.parent / "events.json"
 
 # Georgia Tech's server will reject requests that don't look like they're
 # coming from a real browser, so we send a normal-looking User-Agent header.
@@ -81,6 +91,23 @@ def extract_events(html: str) -> list[dict]:
     return calendar_options["events"]
 
 
+def clean_text(text: str) -> str:
+    """
+    Tidy up one piece of text from the calendar.
+
+    - html.unescape turns leftover HTML entities back into real characters.
+      Some GT event text is escaped twice, so after BeautifulSoup decodes it
+      once we still see things like "Ford ES&amp;T"; this fixes it to
+      "Ford ES&T".
+    - The regex collapses runs of whitespace (including line breaks and
+      non-breaking spaces) into a single space, and strip() trims the ends.
+      That's what made some category names appear twice in Milestone 1,
+      e.g. "Career/Professional development" vs. the same text with extra
+      spaces.
+    """
+    return re.sub(r"\s+", " ", html.unescape(text)).strip()
+
+
 def parse_event(raw_event: dict) -> dict:
     """
     Turn one raw event dict (with an embedded HTML blob) into clean,
@@ -91,10 +118,10 @@ def parse_event(raw_event: dict) -> dict:
     card = BeautifulSoup(raw_event.get("des", ""), "html.parser")
 
     name_tag = card.find("h3")
-    name = name_tag.get_text(strip=True) if name_tag else "(untitled event)"
+    name = clean_text(name_tag.get_text()) if name_tag else "(untitled event)"
 
     description_tag = card.select_one(".event-title-wrapper + div p")
-    description = description_tag.get_text(strip=True) if description_tag else ""
+    description = clean_text(description_tag.get_text()) if description_tag else ""
 
     location = ""
     location_icon = card.select_one(".fa-map-marker")
@@ -102,21 +129,31 @@ def parse_event(raw_event: dict) -> dict:
         # The location text sits in the same <div> as the icon, right
         # after it, so grab the whole div's text and drop the icon itself.
         location_div = location_icon.find_parent("div")
-        location = location_div.get_text(strip=True)
+        location = clean_text(location_div.get_text())
 
-    categories = [
-        tag.get_text(strip=True)
-        for tag in card.select(".event-categories")
-        if tag.get_text(strip=True)
-    ]
+    categories = []
+    for tag in card.select(".event-categories"):
+        category = clean_text(tag.get_text())
+        if category and category not in categories:  # skip blanks and repeats
+            categories.append(category)
 
     event_url = raw_event.get("url", "")
     if event_url and not event_url.startswith("http"):
         event_url = CALENDAR_URL.rstrip("/") + event_url
 
+    start = raw_event.get("start", "")
+
+    # FullCalendar marks all-day events with "allDay". If GT's data doesn't
+    # include that field, fall back to a guess: an event "starting" at
+    # exactly midnight is almost always an all-day event (holidays,
+    # exhibits) rather than something that truly begins at 12:00 a.m.
+    all_day = bool(raw_event.get("allDay")) or start.endswith("T00:00:00")
+
     return {
         "name": name,
-        "start": raw_event.get("start", ""),
+        "start": start,
+        "end": raw_event.get("end", ""),
+        "all_day": all_day,
         "location": location,
         "description": description,
         "categories": categories,
@@ -138,6 +175,19 @@ def print_event(event: dict, index: int) -> None:
     print()
 
 
+def save_events(events: list[dict], path: Path) -> None:
+    """
+    Write all events to a JSON file.
+
+    encoding="utf-8" and ensure_ascii=False keep characters like curly
+    quotes and em-dashes readable in the file, instead of the garbled
+    "ΓÇÖ"-style text you get from a PowerShell redirect.
+    indent=2 makes the file easy to read by eye.
+    """
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(events, f, ensure_ascii=False, indent=2)
+
+
 def main() -> None:
     print(f"Fetching {CALENDAR_URL} ...")
     html = fetch_calendar_html(CALENDAR_URL)
@@ -145,9 +195,12 @@ def main() -> None:
     raw_events = extract_events(html)
     print(f"Found {len(raw_events)} events embedded in the page.\n")
 
-    for index, raw_event in enumerate(raw_events, start=1):
-        event = parse_event(raw_event)
+    events = [parse_event(raw_event) for raw_event in raw_events]
+    for index, event in enumerate(events, start=1):
         print_event(event, index)
+
+    save_events(events, OUTPUT_PATH)
+    print(f"Saved {len(events)} events to {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,328 @@
+[
+  {
+    "id": "clough",
+    "name": "Clough Undergraduate Learning Commons",
+    "keywords": [
+      "clough",
+      "culc"
+    ],
+    "lat": 33.77436,
+    "lng": -84.39646,
+    "source": "wikipedia"
+  },
+  {
+    "id": "student-center",
+    "name": "John Lewis Student Center",
+    "keywords": [
+      "student center",
+      "tech rec"
+    ],
+    "lat": 33.7737,
+    "lng": -84.39845,
+    "source": "approximate"
+  },
+  {
+    "id": "exhibition-hall",
+    "name": "Exhibition Hall",
+    "keywords": [
+      "exhibition hall",
+      "exhibition room"
+    ],
+    "lat": 33.7751,
+    "lng": -84.4023,
+    "source": "approximate"
+  },
+  {
+    "id": "ford-est",
+    "name": "Ford Environmental Science & Technology Building",
+    "keywords": [
+      "ford es&t",
+      "ford environmental",
+      "es&t"
+    ],
+    "lat": 33.77895,
+    "lng": -84.39598,
+    "source": "approximate"
+  },
+  {
+    "id": "west-village",
+    "name": "West Village Dining Hall",
+    "keywords": [
+      "west village"
+    ],
+    "lat": 33.7796,
+    "lng": -84.40465,
+    "source": "approximate"
+  },
+  {
+    "id": "petit",
+    "name": "Petit Biotechnology Building (IBB)",
+    "keywords": [
+      "petit",
+      "ibb"
+    ],
+    "lat": 33.77815,
+    "lng": -84.39805,
+    "source": "approximate"
+  },
+  {
+    "id": "ebb",
+    "name": "Engineered Biosystems Building (EBB)",
+    "keywords": [
+      "engineered biosystems",
+      "ebb"
+    ],
+    "lat": 33.7802,
+    "lng": -84.39815,
+    "source": "approximate"
+  },
+  {
+    "id": "marcus-nano",
+    "name": "Marcus Nanotechnology Building",
+    "keywords": [
+      "marcus nano"
+    ],
+    "lat": 33.7789,
+    "lng": -84.3988,
+    "source": "approximate"
+  },
+  {
+    "id": "ferst-center",
+    "name": "Ferst Center for the Arts",
+    "keywords": [
+      "ferst center"
+    ],
+    "lat": 33.7751,
+    "lng": -84.3992,
+    "source": "wikipedia"
+  },
+  {
+    "id": "price-gilbert",
+    "name": "Price Gilbert Memorial Library",
+    "keywords": [
+      "price gilbert",
+      "georgia tech library",
+      "interactive media zone"
+    ],
+    "lat": 33.7743,
+    "lng": -84.3959,
+    "source": "approximate"
+  },
+  {
+    "id": "crosland",
+    "name": "Crosland Tower",
+    "keywords": [
+      "crosland",
+      "retrotech"
+    ],
+    "lat": 33.77425,
+    "lng": -84.39535,
+    "source": "approximate"
+  },
+  {
+    "id": "whitaker",
+    "name": "U.A. Whitaker Building",
+    "keywords": [
+      "whitaker"
+    ],
+    "lat": 33.7786,
+    "lng": -84.3972,
+    "source": "approximate"
+  },
+  {
+    "id": "okeefe",
+    "name": "O'Keefe Gymnasium",
+    "keywords": [
+      "o'keefe"
+    ],
+    "lat": 33.7789,
+    "lng": -84.39255,
+    "source": "approximate"
+  },
+  {
+    "id": "bobby-dodd",
+    "name": "Bobby Dodd Stadium",
+    "keywords": [
+      "bobby dodd"
+    ],
+    "lat": 33.7725,
+    "lng": -84.39278,
+    "source": "wikipedia"
+  },
+  {
+    "id": "mccamish",
+    "name": "McCamish Pavilion",
+    "keywords": [
+      "mccamish"
+    ],
+    "lat": 33.78083,
+    "lng": -84.39278,
+    "source": "wikipedia"
+  },
+  {
+    "id": "coda",
+    "name": "Coda Building",
+    "keywords": [
+      "coda"
+    ],
+    "lat": 33.7764,
+    "lng": -84.3887,
+    "source": "approximate"
+  },
+  {
+    "id": "tech-square",
+    "name": "Technology Square",
+    "keywords": [
+      "tech square",
+      "techsquare",
+      "scheller"
+    ],
+    "lat": 33.777,
+    "lng": -84.389,
+    "source": "wikipedia"
+  },
+  {
+    "id": "dm-smith",
+    "name": "D.M. Smith Building",
+    "keywords": [
+      "d.m. smith",
+      "dm smith"
+    ],
+    "lat": 33.77355,
+    "lng": -84.39495,
+    "source": "approximate"
+  },
+  {
+    "id": "mason",
+    "name": "Mason Building",
+    "keywords": [
+      "mason building"
+    ],
+    "lat": 33.7766,
+    "lng": -84.3988,
+    "source": "approximate"
+  },
+  {
+    "id": "instructional-center",
+    "name": "Instructional Center",
+    "keywords": [
+      "instructional center"
+    ],
+    "lat": 33.77555,
+    "lng": -84.4013,
+    "source": "approximate"
+  },
+  {
+    "id": "klaus",
+    "name": "Klaus Advanced Computing Building",
+    "keywords": [
+      "klaus"
+    ],
+    "lat": 33.7771,
+    "lng": -84.39625,
+    "source": "approximate"
+  },
+  {
+    "id": "ccb",
+    "name": "College of Computing Building",
+    "keywords": [
+      "ccb",
+      "college of computing"
+    ],
+    "lat": 33.77725,
+    "lng": -84.39735,
+    "source": "approximate"
+  },
+  {
+    "id": "kendeda",
+    "name": "Kendeda Building",
+    "keywords": [
+      "kendeda"
+    ],
+    "lat": 33.7788,
+    "lng": -84.3994,
+    "source": "approximate"
+  },
+  {
+    "id": "crc",
+    "name": "Campus Recreation Center (CRC)",
+    "keywords": [
+      "campus recreation center",
+      "crc"
+    ],
+    "lat": 33.7756,
+    "lng": -84.4035,
+    "source": "approximate"
+  },
+  {
+    "id": "skiles",
+    "name": "Skiles Building",
+    "keywords": [
+      "skiles"
+    ],
+    "lat": 33.7737,
+    "lng": -84.3962,
+    "source": "approximate"
+  },
+  {
+    "id": "van-leer",
+    "name": "Van Leer Building",
+    "keywords": [
+      "van leer"
+    ],
+    "lat": 33.7761,
+    "lng": -84.39735,
+    "source": "approximate"
+  },
+  {
+    "id": "howey",
+    "name": "Howey Physics Building",
+    "keywords": [
+      "howey"
+    ],
+    "lat": 33.7774,
+    "lng": -84.3988,
+    "source": "approximate"
+  },
+  {
+    "id": "boggs",
+    "name": "Boggs Building",
+    "keywords": [
+      "boggs"
+    ],
+    "lat": 33.7758,
+    "lng": -84.3996,
+    "source": "approximate"
+  },
+  {
+    "id": "tech-green",
+    "name": "Tech Green",
+    "keywords": [
+      "tech green",
+      "tech walkway"
+    ],
+    "lat": 33.7744,
+    "lng": -84.39745,
+    "source": "approximate"
+  },
+  {
+    "id": "north-ave-dining",
+    "name": "North Avenue Dining Hall",
+    "keywords": [
+      "north avenue dining"
+    ],
+    "lat": 33.77095,
+    "lng": -84.3914,
+    "source": "approximate"
+  },
+  {
+    "id": "brittain",
+    "name": "Brittain Dining Hall",
+    "keywords": [
+      "brittain"
+    ],
+    "lat": 33.77225,
+    "lng": -84.39125,
+    "source": "approximate"
+  }
+]

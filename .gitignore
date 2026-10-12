@@ -4,3 +4,7 @@ __pycache__/
 *.py[cod]
 events_output.txt
 .claude/settings.local.json
+events.json
+config.example.js
+config.js
+.env

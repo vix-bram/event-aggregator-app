@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!--
+  GT Event Map — Milestone 2.
+
+  What this page does:
+  1. Loads your API key from config.js (not committed to git).
+  2. Loads events.json (written by the scraper, then labeled by locate.py).
+  3. Keeps only events that matched a building and haven't ended yet,
+     sorts them by start time, and takes the next 10.
+  4. Groups those events by building, so two events in the Student Center
+     become one pin with both events in its popup, instead of two pins
+     stacked exactly on top of each other.
+  5. Draws a Google Map of campus with one pin per building.
+
+  How to open it (browsers won't let a page opened straight from disk,
+  i.e. file:///..., read events.json):
+      venv\Scripts\python -m http.server 8000
+  then visit http://localhost:8000/map.html
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GT Event Map</title>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: system-ui, sans-serif; }
+    body { display: flex; flex-direction: column; }
+    header {
+      display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center;
+      padding: 10px 16px; background: #003057; color: #fff; /* GT navy */
+    }
+    header h1 { font-size: 18px; margin: 0; }
+    header .status { font-size: 14px; opacity: 0.85; }
+    header label { font-size: 14px; margin-left: auto; cursor: pointer; }
+    #map { flex: 1; }
+    #message { padding: 24px; font-size: 16px; line-height: 1.5; }
+    .popup { max-width: 280px; font-size: 14px; }
+    .popup h2 { font-size: 15px; margin: 0 0 8px; }
+    .popup .event { margin: 0 0 10px; }
+    .popup .event:last-child { margin-bottom: 0; }
+    .popup .name { font-weight: 600; }
+    .popup .meta { color: #555; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>GT Event Map</h1>
+    <span class="status" id="status">Loading…</span>
+    <label><input type="checkbox" id="show-buildings"> Show all building points</label>
+  </header>
+  <div id="map"></div>
+
+  <!-- config.js defines window.GOOGLE_MAPS_API_KEY. If it's missing,
+       the page shows setup instructions instead of a broken map. -->
+  <script src="config.js"></script>
+  <script>
+    const GT_CENTER = { lat: 33.7765, lng: -84.3980 };
+    const EVENTS_TO_SHOW = 10;
+
+    // Show a plain message in place of the map (used for setup errors).
+    function showMessage(html) {
+      document.getElementById("map").outerHTML = `<div id="message">${html}</div>`;
+      document.getElementById("status").textContent = "";
+    }
+
+    // "2026-10-14T18:00:00" -> "Tue, Oct 14, 6:00 PM" (or "All day").
+    // GT's times have no timezone, so the browser reads them as local
+    // time, which is right as long as your laptop is on Atlanta time.
+    function formatWhen(event) {
+      const date = new Date(event.start);
+      const day = date.toLocaleDateString("en-US",
+        { weekday: "short", month: "short", day: "numeric" });
+      if (event.all_day) return `${day} · All day`;
+      const time = date.toLocaleTimeString("en-US",
+        { hour: "numeric", minute: "2-digit" });
+      return `${day}, ${time}`;
+    }
+
+    // Pick the next N located events that haven't ended yet.
+    function pickUpcoming(events, count) {
+      const now = new Date();
+      return events
+        .filter(e => e.location_status === "matched")
+        .filter(e => new Date(e.end || e.start) >= now)
+        .sort((a, b) => new Date(a.start) - new Date(b.start))
+        .slice(0, count);
+    }
+
+    // [event, event, ...] -> { "Clough ...": [event, event], "Klaus ...": [event] }
+    function groupByBuilding(events) {
+      const groups = {};
+      for (const e of events) {
+        if (!groups[e.building]) groups[e.building] = [];
+        groups[e.building].push(e);
+      }
+      return groups;
+    }
+
+    // Build the popup with DOM methods + textContent rather than pasting
+    // strings into HTML, so a scraped event name containing "<" or a
+    // <script> tag can't break or hijack the page.
+    function buildPopup(building, events) {
+      const box = document.createElement("div");
+      box.className = "popup";
+      const title = document.createElement("h2");
+      title.textContent = building;
+      box.append(title);
+
+      for (const e of events) {
+        const item = document.createElement("div");
+        item.className = "event";
+        const name = document.createElement("a");
+        name.className = "name";
+        name.href = e.url;
+        name.target = "_blank";
+        name.rel = "noopener";
+        name.textContent = e.name;
+        const when = document.createElement("div");
+        when.className = "meta";
+        when.textContent = formatWhen(e);
+        const where = document.createElement("div");
+        where.className = "meta";
+        where.textContent = e.location;
+        item.append(name, when, where);
+        box.append(item);
+      }
+      return box;
+    }
+
+    // Google Maps calls this once its script has loaded (see loadGoogleMaps).
+    async function initMap() {
+      let events, buildings;
+      try {
+        [events, buildings] = await Promise.all([
+          fetch("events.json").then(r => r.json()),
+          fetch("data/gt_buildings.json").then(r => r.json()),
+        ]);
+      } catch (err) {
+        showMessage(`Couldn't load <code>events.json</code>.<br>
+          Run the scraper and <code>locate.py</code> first, and open this page
+          through <code>python -m http.server</code> (not by double-clicking it).`);
+        return;
+      }
+      if (!events.some(e => "location_status" in e)) {
+        showMessage("<code>events.json</code> has no coordinates yet. Run <code>locate.py</code>, then reload.");
+        return;
+      }
+
+      const map = new google.maps.Map(document.getElementById("map"), {
+        center: GT_CENTER,
+        zoom: 16,
+        mapId: "DEMO_MAP_ID", // Google's test map ID; required for the pin style below
+      });
+      const { AdvancedMarkerElement, PinElement } = google.maps.marker;
+      const infoWindow = new google.maps.InfoWindow();
+
+      // --- Event pins: one per building; the number is how many events it has.
+      const upcoming = pickUpcoming(events, EVENTS_TO_SHOW);
+      const groups = groupByBuilding(upcoming);
+      for (const [building, buildingEvents] of Object.entries(groups)) {
+        const first = buildingEvents[0];
+        const pin = new PinElement({
+          background: "#B3A369", borderColor: "#003057", // GT gold / navy
+          glyph: String(buildingEvents.length), glyphColor: "#003057",
+        });
+        const marker = new AdvancedMarkerElement({
+          map, position: { lat: first.lat, lng: first.lng },
+          title: building, content: pin.element, gmpClickable: true,
+        });
+        marker.addListener("click", () => {
+          infoWindow.setContent(buildPopup(building, buildingEvents));
+          infoWindow.open({ map, anchor: marker });
+        });
+      }
+
+      const total = events.filter(e => e.location_status === "matched").length;
+      document.getElementById("status").textContent = upcoming.length
+        ? `Next ${upcoming.length} events · ${Object.keys(groups).length} buildings · ${total} mappable in total`
+        : "No upcoming mappable events. Re-run the scraper for fresh data.";
+
+      // --- Building reference points: a small gray dot for every building
+      // in gt_buildings.json, so you can check each one sits on the right
+      // building. Hover a dot to see its name and where its coordinates
+      // came from.
+      const buildingMarkers = buildings.map(b => {
+        const dot = document.createElement("div");
+        dot.style.cssText = "width:10px;height:10px;border-radius:50%;" +
+          "background:#666;border:2px solid #fff;box-shadow:0 0 2px #000;" +
+          "transform:translateY(50%)"; // center the dot on the point
+        return new AdvancedMarkerElement({
+          position: { lat: b.lat, lng: b.lng },
+          title: `${b.name} (${b.source})`, content: dot,
+        });
+      });
+      document.getElementById("show-buildings").addEventListener("change", ev => {
+        for (const m of buildingMarkers) m.map = ev.target.checked ? map : null;
+      });
+    }
+
+    // Add the Google Maps script tag, using the key from config.js.
+    function loadGoogleMaps() {
+      const key = window.GOOGLE_MAPS_API_KEY;
+      if (!key || key === "PASTE_YOUR_KEY_HERE") {
+        showMessage(`No API key found.<br>Copy <code>config.example.js</code> to
+          <code>config.js</code> and paste your Google Maps API key into it.`);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://maps.googleapis.com/maps/api/js" +
+        `?key=${encodeURIComponent(key)}&libraries=marker&loading=async&callback=initMap`;
+      script.async = true;
+      document.head.append(script);
+    }
+
+    loadGoogleMaps();
+  </script>
+</body>
+</html>
