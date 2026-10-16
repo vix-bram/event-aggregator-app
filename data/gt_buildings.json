@@ -80,21 +80,23 @@
     "id": "marcus-nano",
     "name": "Marcus Nanotechnology Building",
     "keywords": [
-      "marcus nano"
+      "marcus nano",
+      "marcus nanotechnology"
     ],
-    "lat": 33.7789,
-    "lng": -84.3988,
-    "source": "approximate"
+    "lat": 33.77869,
+    "lng": -84.39811,
+    "source": "google_maps"
   },
   {
     "id": "ferst-center",
     "name": "Ferst Center for the Arts",
     "keywords": [
-      "ferst center"
+      "ferst center",
+      "drama tech"
     ],
-    "lat": 33.7751,
-    "lng": -84.3992,
-    "source": "wikipedia"
+    "lat": 33.77505,
+    "lng": -84.39921,
+    "source": "google_maps"
   },
   {
     "id": "price-gilbert",
@@ -268,11 +270,13 @@
     "id": "van-leer",
     "name": "Van Leer Building",
     "keywords": [
-      "van leer"
+      "van leer",
+      "the hive",
+      "hive makerspace"
     ],
-    "lat": 33.7761,
-    "lng": -84.39735,
-    "source": "approximate"
+    "lat": 33.77586,
+    "lng": -84.39704,
+    "source": "google_maps"
   },
   {
     "id": "howey",
@@ -324,5 +328,238 @@
     "lat": 33.77225,
     "lng": -84.39125,
     "source": "approximate"
+  },
+  {
+    "id": "sos-garden",
+    "name": "SOS Community Garden",
+    "keywords": [
+      "sos community garden",
+      "community garden"
+    ],
+    "lat": 33.77531,
+    "lng": -84.40107,
+    "source": "google_maps"
+  },
+  {
+    "id": "couch",
+    "name": "Couch Building",
+    "keywords": [
+      "couch building"
+    ],
+    "lat": 33.77821,
+    "lng": -84.4045,
+    "source": "google_maps"
+  },
+  {
+    "id": "swann",
+    "name": "Swann Building",
+    "keywords": [
+      "swann"
+    ],
+    "lat": 33.77161,
+    "lng": -84.39536,
+    "source": "google_maps"
+  },
+  {
+    "id": "seven-bridges",
+    "name": "Seven Bridges Plaza",
+    "keywords": [
+      "seven bridges"
+    ],
+    "lat": 33.77702,
+    "lng": -84.39831,
+    "source": "google_maps"
+  },
+  {
+    "id": "mrdc",
+    "name": "Manufacturing Related Disciplines Complex (MRDC)",
+    "keywords": [
+      "manufacturing related disciplines",
+      "mrdc",
+      "gtmi",
+      "georgia tech manufacturing institute"
+    ],
+    "lat": 33.7771,
+    "lng": -84.40088,
+    "source": "google_maps"
+  },
+  {
+    "id": "paper-clay",
+    "name": "Paper & Clay",
+    "keywords": [
+      "paper & clay",
+      "paper and clay"
+    ],
+    "lat": 33.77491,
+    "lng": -84.40099,
+    "source": "google_maps"
+  },
+  {
+    "id": "gt-hotel",
+    "name": "Georgia Tech Hotel & Conference Center",
+    "keywords": [
+      "georgia tech hotel"
+    ],
+    "lat": 33.77611,
+    "lng": -84.38923,
+    "source": "google_maps"
+  },
+  {
+    "id": "smithgall",
+    "name": "Smithgall Student Services Building (Flag Building)",
+    "keywords": [
+      "smithgall",
+      "flag building"
+    ],
+    "lat": 33.77453,
+    "lng": -84.39958,
+    "source": "google_maps"
+  },
+  {
+    "id": "stamps-health",
+    "name": "Stamps Health Services",
+    "keywords": [
+      "stamps health"
+    ],
+    "lat": 33.7749,
+    "lng": -84.40291,
+    "source": "google_maps"
+  },
+  {
+    "id": "mose",
+    "name": "Molecular Science & Engineering Building",
+    "keywords": [
+      "molecular science"
+    ],
+    "lat": 33.77982,
+    "lng": -84.39666,
+    "source": "google_maps"
+  },
+  {
+    "id": "savant",
+    "name": "Savant Building",
+    "keywords": [
+      "savant"
+    ],
+    "lat": 33.7721,
+    "lng": -84.39535,
+    "source": "google_maps"
+  },
+  {
+    "id": "guggenheim",
+    "name": "Guggenheim Building",
+    "keywords": [
+      "guggenheim"
+    ],
+    "lat": 33.77226,
+    "lng": -84.39604,
+    "source": "google_maps"
+  },
+  {
+    "id": "arch-east",
+    "name": "Architecture East Building",
+    "keywords": [
+      "architecture east",
+      "east architecture"
+    ],
+    "lat": 33.77617,
+    "lng": -84.39527,
+    "source": "google_maps"
+  },
+  {
+    "id": "peters-deck",
+    "name": "Peters Parking Deck",
+    "keywords": [
+      "peters parking",
+      "peter's parking"
+    ],
+    "lat": 33.77485,
+    "lng": -84.39354,
+    "source": "google_maps"
+  },
+  {
+    "id": "paper-museum",
+    "name": "Renewable Bioproducts Institute (Paper Museum)",
+    "keywords": [
+      "museum of papermaking",
+      "renewable bioproducts"
+    ],
+    "lat": 33.78103,
+    "lng": -84.40466,
+    "source": "google_maps"
+  },
+  {
+    "id": "pettit",
+    "name": "Pettit Microelectronics Building",
+    "keywords": [
+      "pettit"
+    ],
+    "lat": 33.77659,
+    "lng": -84.39761,
+    "source": "google_maps"
+  },
+  {
+    "id": "global-learning",
+    "name": "Global Learning Center",
+    "keywords": [
+      "global learning center"
+    ],
+    "lat": 33.7767,
+    "lng": -84.38993,
+    "source": "google_maps"
+  },
+  {
+    "id": "campanile",
+    "name": "Campanile",
+    "keywords": [
+      "campanile"
+    ],
+    "lat": 33.77434,
+    "lng": -84.39814,
+    "source": "google_maps"
+  },
+  {
+    "id": "caddell",
+    "name": "Caddell Building",
+    "keywords": [
+      "caddell"
+    ],
+    "lat": 33.77651,
+    "lng": -84.39724,
+    "source": "google_maps"
+  },
+  {
+    "id": "coon",
+    "name": "J.S. Coon Building",
+    "keywords": [
+      "js coon",
+      "j.s. coon",
+      "coon building"
+    ],
+    "lat": 33.77255,
+    "lng": -84.39575,
+    "source": "google_maps"
+  },
+  {
+    "id": "north-ave-apts",
+    "name": "North Avenue Apartments",
+    "keywords": [
+      "north avenue apartments",
+      "north ave apartments"
+    ],
+    "lat": 33.77053,
+    "lng": -84.39139,
+    "source": "google_maps"
+  },
+  {
+    "id": "stamps-fields",
+    "name": "Stamps Fields",
+    "keywords": [
+      "stamps field",
+      "stamps fields"
+    ],
+    "lat": 33.77676,
+    "lng": -84.40372,
+    "source": "google_maps"
   }
 ]

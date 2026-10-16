@@ -39,7 +39,7 @@ BUILDINGS_PATH = PROJECT_ROOT / "data" / "gt_buildings.json"
 ONLINE_KEYWORDS = [
     "online", "virtual", "zoom", "teams", "discord", "webinar", "hybrid",
     "tbd", "tba", "related link", "registration required",
-    "georgia tech campus", "off-site",
+    "georgia tech campus", "off-site", "vitual", "various",
 ]
 
 

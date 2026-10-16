@@ -8,3 +8,4 @@ events.json
 config.js
 .env
 events.txt
+building_loc.txt
