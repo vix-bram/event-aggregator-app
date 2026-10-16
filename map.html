@@ -137,7 +137,7 @@
         ]);
       } catch (err) {
         showMessage(`Couldn't load <code>events.json</code>.<br>
-          Run the scraper and <code>locate.py</code> first, and open this page
+          Run <code>scraper/gt_calendar_scraper.py</code> and <code>locate.py</code> first, and open this page
           through <code>python -m http.server</code> (not by double-clicking it).`);
         return;
       }
@@ -176,7 +176,7 @@
       const total = events.filter(e => e.location_status === "matched").length;
       document.getElementById("status").textContent = upcoming.length
         ? `Next ${upcoming.length} events · ${Object.keys(groups).length} buildings · ${total} mappable in total`
-        : "No upcoming mappable events. Re-run the scraper for fresh data.";
+        : "No upcoming mappable events. Re-run scraper/gt_calendar_scraper.py and locate.py for fresh data.";
 
       // --- Building reference points: a small gray dot for every building
       // in gt_buildings.json, so you can check each one sits on the right
