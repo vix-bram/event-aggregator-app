@@ -2,7 +2,7 @@
 Location matcher — Milestone 2.
 
 What this script does, step by step:
-1. Reads events.json (written by scraper/gt_calendar_scraper.py) and
+1. Reads events.json (written by scraper/gt_calendar_rss.py) and
    data/gt_buildings.json (our hand-made list of campus buildings).
 2. For each event, looks for a building keyword inside its free-text
    location, e.g. "Room 357, Clough Undergraduate Learning Commons"
@@ -16,8 +16,8 @@ What this script does, step by step:
    including the most common unmatched locations. That list is your
    to-do list for adding buildings or keywords.
 
-Run it after the scraper:
-    venv\\Scripts\\python scraper\\gt_calendar_scraper.py
+Run it after the RSS reader:
+    venv\\Scripts\\python scraper\\gt_calendar_rss.py
     venv\\Scripts\\python locate.py
 """
 

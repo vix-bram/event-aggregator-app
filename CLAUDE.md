@@ -69,7 +69,15 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 4. Google Maps JavaScript API key, restricted to localhost (a browser key is visible in the page, so the restriction is what protects it). The key goes in `config.js` (gitignored); `config.example.js` is the committed template
 5. `map.html`: plain HTML page that loads `events.json` and shows pins with popups (open it via `python -m http.server`, since browsers block loading local files from `file://`)
 
-**After that:** time filter and color-coded pins; then decide (rules vs. LLM) for unmatched locations and the free-food tag; then Firebase storage; then more sources.
+**Decision (2026-10-22): use GT's RSS feeds instead of scraping the calendar page**, because automated scraping may violate GT's policies, while the feeds are published for reuse. `scraper/gt_calendar_rss.py` now writes `events.json`; `scraper/gt_calendar_scraper.py` is kept for reference only and is no longer run.
+
+* Feeds are listed at https://calendar.gatech.edu/rss-feeds (`/taxonomy/term/<id>/feed`, one per category). Each item's description is the event page as HTML with labeled sections (Event time, Location, Fee, Extras, Invited audience, ...); times are UTC and converted to America/New_York (needs the `tzdata` package on Windows)
+* Extras gives a real "Free food" tag (`free_food` field), which the old scraper didn't have
+* Known feed problems, to be reported to GT by email: Student sponsored (term 19) returns a PHP out-of-memory error; Special event (17) is empty; Seminar/Lecture/Colloquium links to the same feed as Conference/Symposium (14); uncategorized events are in no feed. Together the feeds cover only ~40% of the upcoming events the page scraper found (164 of 422 on 2026-10-22)
+* The user is also asking GT whether it has an official list of buildings with coordinates
+* A pre-save sanity check stops the run (and keeps the old `events.json`) if 0 events are found or most lack a name or location
+
+**After that:** time filter and color-coded pins; then decide (rules vs. LLM) for unmatched locations; then Firebase storage; then more sources.
 
 ## Repository Notes
 

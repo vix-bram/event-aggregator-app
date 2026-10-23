@@ -1,6 +1,11 @@
 """
 GT Campus Calendar scraper — Milestone 1.
 
+NOT USED ANYMORE: replaced by gt_calendar_rss.py, which reads the RSS
+feeds GT publishes instead of pulling data out of the calendar web page.
+Kept for reference in case GT confirms the page can be used directly
+(it currently finds ~2.5x more upcoming events than the feeds).
+
 What this script does, step by step:
 1. Downloads the HTML for https://calendar.gatech.edu/
 2. Finds a special <script> tag Drupal (the site's CMS) embeds on every
