@@ -11,6 +11,10 @@
      become one pin with both events in its popup, instead of two pins
      stacked exactly on top of each other.
   5. Draws a Google Map of campus with one pin per building.
+  6. Lists the events that can't be pinned (online, no location, or a
+     place we don't have coordinates for) in a panel beside the map, for
+     the same time frame as the pins, so no event is hidden just because
+     it has no pin.
 
   How to open it (browsers won't let a page opened straight from disk,
   i.e. file:///..., read events.json):
@@ -32,14 +36,46 @@
     header h1 { font-size: 18px; margin: 0; }
     header .status { font-size: 14px; opacity: 0.85; }
     header label { font-size: 14px; margin-left: auto; cursor: pointer; }
+    main { flex: 1; display: flex; min-height: 0; }
     #map { flex: 1; }
     #message { padding: 24px; font-size: 16px; line-height: 1.5; }
+
+    /* Unmapped events panel: beside the map on wide screens, below it on
+       phones. */
+    #unmapped {
+      width: 340px; overflow-y: auto; padding: 12px 16px;
+      border-left: 1px solid #ddd; font-size: 14px; background: #fafafa;
+    }
+    #unmapped[hidden] { display: none; }
+    #unmapped h2 { font-size: 16px; margin: 0 0 2px; }
+    #unmapped .window { color: #555; margin: 0 0 12px; }
+    #unmapped h3 {
+      font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em;
+      color: #003057; margin: 16px 0 8px;
+    }
+    #unmapped .event { padding: 8px 0; border-top: 1px solid #e5e5e5; }
+    @media (max-width: 700px) {
+      main { flex-direction: column; }
+      #map { flex: none; height: 60vh; }
+      #unmapped { width: auto; border-left: none; border-top: 1px solid #ddd; overflow: visible; }
+    }
+
     .popup { max-width: 280px; font-size: 14px; }
     .popup h2 { font-size: 15px; margin: 0 0 8px; }
     .popup .event { margin: 0 0 10px; }
     .popup .event:last-child { margin-bottom: 0; }
-    .popup .name { font-weight: 600; }
-    .popup .meta { color: #555; }
+    .event .name { font-weight: 600; }
+    .event .meta { color: #555; }
+    .event .summary {
+      margin-top: 4px; color: #333;
+      /* Long summaries are cut to 3 lines; the link has the full details. */
+      display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .event .tag {
+      display: inline-block; margin-top: 4px; padding: 1px 6px; border-radius: 4px;
+      background: #e6f4ea; color: #137333; font-size: 12px; font-weight: 600;
+    }
     #legend { display: none; gap: 12px; font-size: 13px; }
     #legend.visible { display: flex; }
     #legend span::before {
@@ -57,7 +93,11 @@
     <!-- Filled in by initMap from SOURCE_COLORS, shown with the building points. -->
     <div id="legend"></div>
   </header>
-  <div id="map"></div>
+  <main>
+    <div id="map"></div>
+    <!-- Filled in by showUnmapped once the events have loaded. -->
+    <aside id="unmapped" hidden></aside>
+  </main>
 
   <!-- config.js defines window.GOOGLE_MAPS_API_KEY. If it's missing,
        the page shows setup instructions instead of a broken map. -->
@@ -75,6 +115,14 @@
       google_maps: { color: "#188038", label: "Checked in Google Maps" },
     };
     const UNKNOWN_SOURCE_COLOR = "#666";
+
+    // Sections of the unmapped panel, in order, keyed by the
+    // location_status locate.py gave each event.
+    const UNMAPPED_SECTIONS = [
+      { status: "online", title: "Online" },
+      { status: "unmatched", title: "Location not on the map" },
+      { status: "no_location", title: "No location listed" },
+    ];
 
     // Show a plain message in place of the map (used for setup errors).
     function showMessage(html) {
@@ -96,14 +144,21 @@
       return `${day}, ${time}`;
     }
 
-    // Pick the next N located events that haven't ended yet.
-    function pickUpcoming(events, count) {
+    // Events that haven't ended yet, sorted by start time.
+    function notEnded(events) {
       const now = new Date();
       return events
-        .filter(e => e.location_status === "matched")
         .filter(e => new Date(e.end || e.start) >= now)
-        .sort((a, b) => new Date(a.start) - new Date(b.start))
-        .slice(0, count);
+        .sort((a, b) => new Date(a.start) - new Date(b.start));
+    }
+
+    // Pick the next N located events. If more events start at the same
+    // time as the Nth one, they're all included, so none get cut off.
+    function pickUpcoming(events, count) {
+      const located = notEnded(events).filter(e => e.location_status === "matched");
+      if (located.length <= count) return located;
+      const lastStart = new Date(located[count - 1].start);
+      return located.filter(e => new Date(e.start) <= lastStart);
     }
 
     // [event, event, ...] -> { "Clough ...": [event, event], "Klaus ...": [event] }
@@ -116,35 +171,86 @@
       return groups;
     }
 
-    // Build the popup with DOM methods + textContent rather than pasting
-    // strings into HTML, so a scraped event name containing "<" or a
-    // <script> tag can't break or hijack the page.
+    // One event's card, used in both the map popups and the unmapped panel.
+    // Built with DOM methods + textContent rather than pasting strings into
+    // HTML, so an event name containing "<" or a <script> tag can't break
+    // or hijack the page.
+    function buildEventItem(e, { showSummary }) {
+      const item = document.createElement("div");
+      item.className = "event";
+      const name = document.createElement("a");
+      name.className = "name";
+      name.href = e.url;
+      name.target = "_blank";
+      name.rel = "noopener";
+      name.textContent = e.name;
+      const when = document.createElement("div");
+      when.className = "meta";
+      when.textContent = formatWhen(e);
+      item.append(name, when);
+
+      if (e.location) {
+        const where = document.createElement("div");
+        where.className = "meta";
+        where.textContent = e.location;
+        item.append(where);
+      }
+      if (showSummary && e.description) {
+        const summary = document.createElement("div");
+        summary.className = "summary";
+        summary.textContent = e.description;
+        item.append(summary);
+      }
+      if (e.free_food) {
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = "Free food";
+        item.append(tag);
+      }
+      return item;
+    }
+
     function buildPopup(building, events) {
       const box = document.createElement("div");
       box.className = "popup";
       const title = document.createElement("h2");
       title.textContent = building;
       box.append(title);
-
-      for (const e of events) {
-        const item = document.createElement("div");
-        item.className = "event";
-        const name = document.createElement("a");
-        name.className = "name";
-        name.href = e.url;
-        name.target = "_blank";
-        name.rel = "noopener";
-        name.textContent = e.name;
-        const when = document.createElement("div");
-        when.className = "meta";
-        when.textContent = formatWhen(e);
-        const where = document.createElement("div");
-        where.className = "meta";
-        where.textContent = e.location;
-        item.append(name, when, where);
-        box.append(item);
-      }
+      for (const e of events) box.append(buildEventItem(e, { showSummary: false }));
       return box;
+    }
+
+    // Fill the side panel with the events that can't be pinned, for the
+    // same time frame as the pins: everything that hasn't ended and starts
+    // no later than the last pinned event. Returns how many it listed.
+    function showUnmapped(events, pinned) {
+      const windowEnd = pinned.length
+        ? new Date(pinned[pinned.length - 1].start)
+        : null; // no pins at all: list every upcoming unmapped event
+      const unmapped = notEnded(events).filter(e =>
+        e.location_status !== "matched" &&
+        (windowEnd === null || new Date(e.start) <= windowEnd));
+
+      const panel = document.getElementById("unmapped");
+      const heading = document.createElement("h2");
+      heading.textContent = `Not on the map (${unmapped.length})`;
+      const timeFrame = document.createElement("p");
+      timeFrame.className = "window";
+      timeFrame.textContent = windowEnd
+        ? `Events through ${formatWhen({ start: pinned[pinned.length - 1].start })}, the same time frame as the pins.`
+        : "All upcoming events that can't be pinned.";
+      panel.append(heading, timeFrame);
+
+      for (const { status, title } of UNMAPPED_SECTIONS) {
+        const sectionEvents = unmapped.filter(e => e.location_status === status);
+        if (!sectionEvents.length) continue;
+        const sectionTitle = document.createElement("h3");
+        sectionTitle.textContent = `${title} (${sectionEvents.length})`;
+        panel.append(sectionTitle);
+        for (const e of sectionEvents) panel.append(buildEventItem(e, { showSummary: true }));
+      }
+      panel.hidden = false;
+      return unmapped.length;
     }
 
     // Google Maps calls this once its script has loaded (see loadGoogleMaps).
@@ -193,9 +299,9 @@
         });
       }
 
-      const total = events.filter(e => e.location_status === "matched").length;
+      const unmappedCount = showUnmapped(events, upcoming);
       document.getElementById("status").textContent = upcoming.length
-        ? `Next ${upcoming.length} events · ${Object.keys(groups).length} buildings · ${total} mappable in total`
+        ? `Next ${upcoming.length} events on the map · ${Object.keys(groups).length} buildings · ${unmappedCount} more in the list`
         : "No upcoming mappable events. Re-run scraper/gt_calendar_rss.py and locate.py for fresh data.";
 
       // --- Building reference points: a small dot for every building in
