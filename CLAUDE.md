@@ -77,7 +77,7 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 * The user is also asking GT whether it has an official list of buildings with coordinates
 * A pre-save sanity check stops the run (and keeps the old `events.json`) if 0 events are found or most lack a name or location
 
-**Checking building coordinates:** each building in `data/gt_buildings.json` has a `source` (`approximate` = Claude's unverified estimate, `wikipedia`, `google_maps` = picked by the user). `check_buildings.py` compares every building with OpenStreetMap (one Overpass request) and lists those more than 50 m off; it only reports, never edits. In `map.html`, "Show all building points" colors the dots by source (red = unverified). When the user sends a corrected coordinate, set that building's `source` to `google_maps`.
+**Checking building coordinates:** each building in `data/gt_buildings.json` has a `source` (`approximate` = Claude's unverified estimate, `wikipedia`, `google_maps` = picked by the user). The user checks them by eye on `map.html`, where "Show all building points" colors the dots by source (red = unverified). When the user sends a corrected coordinate, set that building's `source` to `google_maps`.
 
 **After that:** time filter and color-coded pins; then decide (rules vs. LLM) for unmatched locations; then Firebase storage; then more sources.
 
