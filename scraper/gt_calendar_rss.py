@@ -24,8 +24,8 @@ What this script does, step by step:
 Known feed problems (as of October 2026, to be reported to GT):
 - "Student sponsored" returns a PHP out-of-memory error instead of RSS
 - "Special event" returns a valid but empty feed
-- "Seminar/Lecture/Colloquium" links to the same feed as
-  "Conference/Symposium" (term 14), so seminars have no feed of their own
+- The "Seminar/Lecture/Colloquium" link on the feeds page points to the
+  Conference/Symposium feed (term 14); the real seminar feed is term 16
 - Events with no category aren't in any feed
 Together these mean the feeds currently cover only ~40% of the events
 shown on the calendar's main page.
@@ -55,6 +55,7 @@ FEEDS = [
     ("Career/Professional development", 13),
     ("Conference/Symposium", 14),  # "Seminar/Lecture/Colloquium" also links here
     ("Other/Miscellaneous", 15),
+    ("Seminar/Lecture/Colloquium", 16),  # the actual feed is 16, but the rss feed links to 14 (Conference/Symposium) instead
     ("Special event", 17),
     ("Sports/Athletics", 18),
     ("Student sponsored", 19),

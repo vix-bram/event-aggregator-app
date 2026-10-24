@@ -73,9 +73,11 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 
 * Feeds are listed at https://calendar.gatech.edu/rss-feeds (`/taxonomy/term/<id>/feed`, one per category). Each item's description is the event page as HTML with labeled sections (Event time, Location, Fee, Extras, Invited audience, ...); times are UTC and converted to America/New_York (needs the `tzdata` package on Windows)
 * Extras gives a real "Free food" tag (`free_food` field), which the old scraper didn't have
-* Known feed problems, to be reported to GT by email: Student sponsored (term 19) returns a PHP out-of-memory error; Special event (17) is empty; Seminar/Lecture/Colloquium links to the same feed as Conference/Symposium (14); uncategorized events are in no feed. Together the feeds cover only ~40% of the upcoming events the page scraper found (164 of 422 on 2026-10-22)
+* Known feed problems, to be reported to GT by email: Student sponsored (term 19) returns a PHP out-of-memory error; Special event (17) is empty; the Seminar/Lecture/Colloquium link points to the Conference/Symposium feed (14), though the real seminar feed exists at term 16 (found by the user, now in `FEEDS`); uncategorized events are in no feed. Before adding term 16, the feeds covered only ~40% of the upcoming events the page scraper found (164 of 422 on 2026-10-22)
 * The user is also asking GT whether it has an official list of buildings with coordinates
 * A pre-save sanity check stops the run (and keeps the old `events.json`) if 0 events are found or most lack a name or location
+
+**Checking building coordinates:** each building in `data/gt_buildings.json` has a `source` (`approximate` = Claude's unverified estimate, `wikipedia`, `google_maps` = picked by the user). `check_buildings.py` compares every building with OpenStreetMap (one Overpass request) and lists those more than 50 m off; it only reports, never edits. In `map.html`, "Show all building points" colors the dots by source (red = unverified). When the user sends a corrected coordinate, set that building's `source` to `google_maps`.
 
 **After that:** time filter and color-coded pins; then decide (rules vs. LLM) for unmatched locations; then Firebase storage; then more sources.
 

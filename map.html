@@ -40,6 +40,13 @@
     .popup .event:last-child { margin-bottom: 0; }
     .popup .name { font-weight: 600; }
     .popup .meta { color: #555; }
+    #legend { display: none; gap: 12px; font-size: 13px; }
+    #legend.visible { display: flex; }
+    #legend span::before {
+      content: ""; display: inline-block; width: 10px; height: 10px;
+      margin-right: 5px; border-radius: 50%; border: 2px solid #fff;
+      background: var(--dot); vertical-align: -2px;
+    }
   </style>
 </head>
 <body>
@@ -47,6 +54,8 @@
     <h1>GT Event Map</h1>
     <span class="status" id="status">Loading…</span>
     <label><input type="checkbox" id="show-buildings"> Show all building points</label>
+    <!-- Filled in by initMap from SOURCE_COLORS, shown with the building points. -->
+    <div id="legend"></div>
   </header>
   <div id="map"></div>
 
@@ -57,15 +66,26 @@
     const GT_CENTER = { lat: 33.7765, lng: -84.3980 };
     const EVENTS_TO_SHOW = 10;
 
+    // Building dot colors, by where the building's coordinates came from
+    // (the "source" field in gt_buildings.json). Red ones are guesses that
+    // still need checking against Google Maps.
+    const SOURCE_COLORS = {
+      approximate: { color: "#d93025", label: "Estimated (unverified)" },
+      wikipedia:   { color: "#f29900", label: "Wikipedia" },
+      google_maps: { color: "#188038", label: "Checked in Google Maps" },
+    };
+    const UNKNOWN_SOURCE_COLOR = "#666";
+
     // Show a plain message in place of the map (used for setup errors).
     function showMessage(html) {
       document.getElementById("map").outerHTML = `<div id="message">${html}</div>`;
       document.getElementById("status").textContent = "";
     }
 
-    // "2026-10-14T18:00:00" -> "Tue, Oct 14, 6:00 PM" (or "All day").
-    // GT's times have no timezone, so the browser reads them as local
-    // time, which is right as long as your laptop is on Atlanta time.
+    // "2026-10-14T18:00:00-04:00" -> "Tue, Oct 14, 6:00 PM" (or "All day").
+    // The times include Atlanta's UTC offset, and the browser shows them
+    // in your laptop's time zone, so they're right as long as it's on
+    // Atlanta time.
     function formatWhen(event) {
       const date = new Date(event.start);
       const day = date.toLocaleDateString("en-US",
@@ -178,22 +198,35 @@
         ? `Next ${upcoming.length} events · ${Object.keys(groups).length} buildings · ${total} mappable in total`
         : "No upcoming mappable events. Re-run scraper/gt_calendar_rss.py and locate.py for fresh data.";
 
-      // --- Building reference points: a small gray dot for every building
-      // in gt_buildings.json, so you can check each one sits on the right
-      // building. Hover a dot to see its name and where its coordinates
-      // came from.
+      // --- Building reference points: a small dot for every building in
+      // gt_buildings.json, colored by where its coordinates came from, so
+      // you can check each one sits on the right building. Hover a dot to
+      // see its name and source.
       const buildingMarkers = buildings.map(b => {
         const dot = document.createElement("div");
+        const color = SOURCE_COLORS[b.source]?.color ?? UNKNOWN_SOURCE_COLOR;
         dot.style.cssText = "width:10px;height:10px;border-radius:50%;" +
-          "background:#666;border:2px solid #fff;box-shadow:0 0 2px #000;" +
+          `background:${color};border:2px solid #fff;box-shadow:0 0 2px #000;` +
           "transform:translateY(50%)"; // center the dot on the point
         return new AdvancedMarkerElement({
           position: { lat: b.lat, lng: b.lng },
           title: `${b.name} (${b.source})`, content: dot,
         });
       });
+
+      // Legend: one entry per source, with how many buildings use it.
+      const legend = document.getElementById("legend");
+      for (const [source, { color, label }] of Object.entries(SOURCE_COLORS)) {
+        const count = buildings.filter(b => b.source === source).length;
+        const entry = document.createElement("span");
+        entry.style.setProperty("--dot", color);
+        entry.textContent = `${label} (${count})`;
+        legend.append(entry);
+      }
+
       document.getElementById("show-buildings").addEventListener("change", ev => {
         for (const m of buildingMarkers) m.map = ev.target.checked ? map : null;
+        legend.classList.toggle("visible", ev.target.checked);
       });
     }
 
