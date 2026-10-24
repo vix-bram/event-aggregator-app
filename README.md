@@ -23,6 +23,7 @@ It's being built for Georgia Tech first. The goal is to eventually expand to col
 * Flags events that offer free food in the event data, using the calendar's own "Extras" field (not shown on the map yet)
 
 **Planned**
+* A list of online events and events whose location can't be placed on the map, so no event is hidden just because it has no pin
 * Filter by date and time ("show me events on Thursday at 4pm")
 * Color-coded pins by category (free food, social, professional, sports, academic, arts)
 * Filters for free food and registration required

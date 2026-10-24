@@ -79,7 +79,9 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 
 **Checking building coordinates:** each building in `data/gt_buildings.json` has a `source` (`approximate` = Claude's unverified estimate, `wikipedia`, `google_maps` = picked by the user). The user checks them by eye on `map.html`, where "Show all building points" colors the dots by source (red = unverified). When the user sends a corrected coordinate, set that building's `source` to `google_maps`.
 
-**After that:** time filter and color-coded pins; then decide (rules vs. LLM) for unmatched locations; then Firebase storage; then more sources.
+**Product rule (user, 2026-10-24): users must be able to see every event GT publishes in their chosen time frame, not just the ones we can pin.** Events that are online, have no location, or whose location can't be matched (e.g. Rollins, Chapin, Holland Plant, whose positions the user doesn't know) will go in a separate list in the app, showing whatever the RSS feed gives. Don't guess coordinates for unknown places to force them onto the map.
+
+**After that:** list of online/unmapped events; time filter and color-coded pins; then decide (rules vs. LLM) for unmatched locations; then Firebase storage; then more sources.
 
 ## Repository Notes
 

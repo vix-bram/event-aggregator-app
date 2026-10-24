@@ -28,9 +28,9 @@
       "exhibition hall",
       "exhibition room"
     ],
-    "lat": 33.7751,
-    "lng": -84.4023,
-    "source": "approximate"
+    "lat": 33.77479,
+    "lng": -84.40179,
+    "source": "google_maps"
   },
   {
     "id": "ford-est",
@@ -61,20 +61,21 @@
       "petit",
       "ibb"
     ],
-    "lat": 33.77815,
-    "lng": -84.39805,
-    "source": "approximate"
+    "lat": 33.77865,
+    "lng": -84.39741,
+    "source": "google_maps"
   },
   {
     "id": "ebb",
     "name": "Engineered Biosystems Building (EBB)",
     "keywords": [
       "engineered biosystems",
-      "ebb"
+      "ebb",
+      "krone"
     ],
-    "lat": 33.7802,
-    "lng": -84.39815,
-    "source": "approximate"
+    "lat": 33.78101,
+    "lng": -84.39875,
+    "source": "google_maps"
   },
   {
     "id": "marcus-nano",
@@ -127,9 +128,9 @@
     "keywords": [
       "whitaker"
     ],
-    "lat": 33.7786,
-    "lng": -84.3972,
-    "source": "approximate"
+    "lat": 33.77839,
+    "lng": -84.39689,
+    "source": "google_maps"
   },
   {
     "id": "okeefe",
@@ -137,9 +138,9 @@
     "keywords": [
       "o'keefe"
     ],
-    "lat": 33.7789,
-    "lng": -84.39255,
-    "source": "approximate"
+    "lat": 33.77948,
+    "lng": -84.39165,
+    "source": "google_maps"
   },
   {
     "id": "bobby-dodd",
@@ -167,9 +168,20 @@
     "keywords": [
       "coda"
     ],
-    "lat": 33.7764,
-    "lng": -84.3887,
-    "source": "approximate"
+    "lat": 33.77528,
+    "lng": -84.3885,
+    "source": "google_maps"
+  },
+  {
+    "id": "barnes-noble",
+    "name": "Barnes & Noble at Georgia Tech",
+    "keywords": [
+      "barnes & noble",
+      "barnes and noble"
+    ],
+    "lat": 33.77666,
+    "lng": -84.38856,
+    "source": "google_maps"
   },
   {
     "id": "tech-square",
@@ -179,9 +191,9 @@
       "techsquare",
       "scheller"
     ],
-    "lat": 33.777,
-    "lng": -84.389,
-    "source": "wikipedia"
+    "lat": 33.77683,
+    "lng": -84.38882,
+    "source": "google_maps"
   },
   {
     "id": "dm-smith",
@@ -305,9 +317,9 @@
       "tech green",
       "tech walkway"
     ],
-    "lat": 33.7744,
-    "lng": -84.39745,
-    "source": "approximate"
+    "lat": 33.7746,
+    "lng": -84.39732,
+    "source": "google_maps"
   },
   {
     "id": "north-ave-dining",
@@ -451,8 +463,8 @@
     "keywords": [
       "guggenheim"
     ],
-    "lat": 33.77226,
-    "lng": -84.39604,
+    "lat": 33.77161,
+    "lng": -84.39571,
     "source": "google_maps"
   },
   {
