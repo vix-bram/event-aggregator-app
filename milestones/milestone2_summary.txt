@@ -1,112 +1,125 @@
 MILESTONE 2 SUMMARY
 ===================
 
-Status: Planned (October 11, 2026)
+Status: Complete (October 24, 2026). Planned October 11, 2026; the original
+plan is in git history.
 
 Objective
 ---------
-Show the next 10 upcoming events from calendar.gatech.edu as clickable pins
-on a Google Map of the Georgia Tech campus.
+Show upcoming Georgia Tech events as clickable pins on a Google Map of
+campus.
 
-Done when: opening map.html shows 10 correctly placed pins, each with a
-popup, and the match rate for locations is known.
+Done when: map.html shows the next 10 events as correctly placed pins with
+popups, lists every event that can't be pinned for the same time frame, and
+the location match rate is known. All three are true.
 
-Key Decision: No LLM for calendar.gatech.edu
---------------------------------------------
-The original plan was to send scraped events to the Gemini API for parsing.
-After reviewing the Milestone 1 scraper and its output, that step was dropped
-for this source:
+What Was Accomplished
+---------------------
 
-- The scraper reads JSON that the calendar page already embeds, so the name,
-  start time, location, categories and link come out clean for all 682
-  events. No text needs to be interpreted.
-- An LLM would add cost per call, slower runs, and some randomness, without
-  improving fields we already have exactly.
-- An LLM may still be useful later for messy sources (department pages with
-  no consistent structure) or for fields plain rules handle badly. We'll
-  only add it after measuring what simple rules miss.
+1. Event data from GT's RSS feeds (scraper/gt_calendar_rss.py)
+   - Reads the category feeds listed at https://calendar.gatech.edu/rss-feeds
+     instead of scraping the calendar page (see Key Decisions)
+   - Parses each item's labeled sections: event time, location, fee,
+     extras (free food), invited audience, related links, categories
+   - Converts times from UTC to Atlanta time; flags all-day events
+   - Keeps each event once when it appears in several feeds, keeps only
+     events that haven't ended, and merges events GT posted twice under
+     different links (same name, start time and location)
+   - Sanity check: stops with an error and keeps the old events.json if no
+     events are found or most have no name or location
+   - Identifies itself honestly in its User-Agent and waits 2 seconds
+     between feeds
 
-What the Milestone 1 Output Showed
-----------------------------------
-1. Location is the hard part, not extraction
-   - 613 of 682 events have a location, but it is free text written by
-     whoever posted the event, often down to the room, e.g.
-     * "Room 357, Clough Undergraduate Learning Commons"
-     * "Clough Lounge/Clough 211"
-     * "Petit Biotech Building, 315 Ferst Drive NW, Nerem Atrium, ..."
-   - A map needs a building with coordinates, not a room.
-   - About 75 events are "Online", "Virtual", "TBD" or "Georgia Tech
-     Campus" and can't be pinned at all.
+2. Building list (data/gt_buildings.json)
+   - 57 places with keywords and coordinates, every one checked by eye on
+     the map by the project owner (source: google_maps)
+   - Places too far away for the campus map (e.g. R. Randall Rollins at
+     Emory) are marked off_campus
 
-2. GT's categories don't match ours
-   - GT uses tags like "Student sponsored", "Training/Workshop" and
-     "Seminar/Lecture/Colloquium".
-   - Some tags appear twice because of stray spaces (e.g. two separate
-     "Career/Professional development" counts).
-   - There is no free-food tag. Only 11 events are tagged "Free", while
-     about 50 mention food, pizza, lunch or snacks in their text.
+3. Location matching (locate.py)
+   - Matches whole-word building keywords inside free-text locations
+     ("Room 357, Clough Undergraduate Learning Commons" -> Clough)
+   - Labels every event: matched, off_campus, unmatched, online,
+     no_location
+   - Prints the match rate and the most common unmatched locations, which
+     serve as the to-do list for new buildings
 
-3. Small cleanup issues
-   - HTML entities left in text (e.g. "Ford ES&amp;T" instead of "Ford ES&T")
-   - Start times of T00:00:00 that probably mean all-day events
-   - Some suspicious times, e.g. "Singapore Society Friday Dinner" at
-     06:30. Check whether that's an a.m./p.m. mix-up in GT's data or in
-     the scraper.
-   - Garbled characters like "ΓÇÖ" in events_output.txt come from saving
-     the output through a PowerShell redirect, not from the scraper.
-     Writing a UTF-8 file directly fixes this.
+4. Map page (map.html)
+   - Google Map of campus with one numbered pin per building; clicking a
+     pin lists that building's events (name linked to the GT page, time,
+     location, free-food tag)
+   - Side panel "Not on the map" listing online, off-campus, unmatched and
+     no-location events for the same time frame as the pins, so no event
+     is hidden just because it has no pin
+   - "Show all building points" draws every building, colored by where its
+     coordinates came from, for checking them
+   - API key lives in config.js (gitignored) and is restricted to
+     localhost
 
-Plan
-----
-1. Save clean JSON (scraper/gt_calendar_scraper.py)
-   - Also write events.json in UTF-8; keep the terminal printout
-   - Unescape HTML entities (Python's html.unescape)
-   - Trim whitespace in category names
-   - Add an all_day flag for midnight start times
+Results (October 24, 2026)
+--------------------------
+- 8 of 10 listed feeds work; 213 upcoming events after merging duplicates
+- 14 upcoming events list free food (from the feed's own Extras field)
+- Locations: 89 pinned, 1 off campus, 15 unmatched, 79 online,
+  29 with no location
+- Match rate for in-person events: 86% (up from 80% at the start)
+- The 15 unmatched are mostly facilities staff rooms ("Area 1 Break
+  Room", "Holland Plant Control Room") and off-campus places with no
+  coordinates; they appear in the map's list
 
-2. Building lookup table (data/gt_buildings.json)
-   - Roughly 15-20 buildings, each with a name, a few keywords
-     (e.g. ["clough", "culc"]) and lat/lng
-   - Get coordinates by right-clicking each building in Google Maps
-   - Start with the most common locations: Clough, John Lewis Student
-     Center, Ford ES&T, West Village, Petit, Ferst Center, Price Gilbert,
-     Tech Green, CRC
-
-3. Matcher script (locate.py)
-   - Check each event's location text for building keywords
-   - Add lat/lng to matched events
-   - Mark Online / Virtual / TBD events as unmappable
-   - Print a summary, e.g. "412 matched, 126 unmatched, 75 online/TBD".
-     This number shows how much a smarter approach (more rules or an LLM)
-     would actually gain.
-
-4. Google Maps API key
-   - Create a Maps JavaScript API key in Google Cloud
-   - Restrict it to localhost. A browser key is visible to anyone who
-     views the page, so the restriction is what protects it.
-
-5. Map page (map.html)
-   - One plain HTML file, no React yet
-   - Loads events.json, centers the map on campus, and drops pins for the
-     next 10 matched events
-   - Clicking a pin shows the name, time, location and link
-   - Serve it with `python -m http.server` and open
-     http://localhost:8000/map.html. Browsers block pages opened as
-     file:// from loading local JSON files.
-
-Planned Files
+Key Decisions
 -------------
-- scraper/gt_calendar_scraper.py: updated to also write events.json
-- data/gt_buildings.json: building names, keywords and coordinates
-- locate.py: matches events to buildings, prints match rate
-- events.json: generated output (consider adding to .gitignore like
-  events_output.txt)
-- map.html: the map page
+- No LLM for calendar.gatech.edu. The data is already structured, so plain
+  parsing gives exact results; an LLM would add cost and randomness. It may
+  still help later with messy sources, after measuring what rules miss.
+- RSS feeds instead of scraping the calendar page (October 22). The feeds
+  are what GT publishes for reuse, while automated scraping of the page
+  might go against its policies. The cost: the feeds covered only ~40% of
+  the page's upcoming events at first (see Open Issues). The old scraper
+  is kept in scraper/gt_calendar_scraper.py for reference, unused.
+- Every event in the time frame must be visible. Events that can't be
+  pinned go in a list rather than being dropped, and coordinates are never
+  guessed for places whose location isn't known (e.g. Chapin, Holland
+  Plant).
+- One pin per building, so events in the same building don't stack.
 
-Next Phase
-----------
-- Time filter ("show me events on Thursday at 4pm") and color-coded pins
-- Decide between keyword rules and an LLM for unmatched locations and the
-  free-food tag, based on the match rate from locate.py
-- Firebase storage
-- More sources (Engage, athletics, department pages)
+Issues Found in GT's Feeds
+--------------------------
+Reported to GT by email on October 24; awaiting a reply.
+- "Student sponsored" (term 19) returns a PHP out-of-memory error
+- "Special event" (term 17) is empty
+- The "Seminar/Lecture/Colloquium" link points to term 14
+  (Conference/Symposium); the real seminar feed, term 16, was found by ID
+  and added
+- The "Institute/Academic/Religious" link leads to a feed titled
+  "holidays and observances"
+- Events with no category are in no feed
+- The same event is sometimes posted twice under different links (now
+  merged)
+The email also asked whether GT has an official list of building
+coordinates, and whether reading the feeds this way is acceptable.
+
+Open Issues
+-----------
+- Coverage: student-sponsored and uncategorized events are missing until
+  GT fixes the feeds or adds an all-events feed.
+- Time frame: the map shows "the next 10 pinned events", so its window
+  varies (about 3 days on October 24). Milestone 3's date/time filter
+  replaces this.
+
+Key Files
+---------
+- scraper/gt_calendar_rss.py: reads the RSS feeds, writes events.json
+- data/gt_buildings.json: buildings, keywords, coordinates, sources
+- locate.py: matches events to buildings, prints the match rate
+- map.html: the map page
+- config.example.js: template for config.js (API key, gitignored)
+- docs/map_milestone2.png: screenshot used in the README
+
+Next Phase (Milestone 3: Filters and Categories)
+------------------------------------------------
+- Date/time filter for both the pins and the list
+- Map GT's categories to ours with keyword rules; free food from Extras
+- Registration-required flag
+- Color-coded pins by category, with a legend
+- See the checklist in CLAUDE.md

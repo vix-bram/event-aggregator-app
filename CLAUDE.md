@@ -61,7 +61,7 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 
 **Decision: no LLM for calendar.gatech.edu.** The scraper already gets clean fields from embedded JSON, so an LLM would add cost and randomness without improving the data. The real problems are location text (free-form, room-level, sometimes Online/TBD) and categories (GT's tags don't match ours; no free-food tag). Try keyword rules first, measure what they miss, and only then consider an LLM.
 
-**Milestone 2 (in progress):** Show the next 10 upcoming events as clickable pins on a map. See `milestones/milestone2_summary.txt` for the full plan.
+**Milestone 2 (complete, 2026-10-24):** Show the next 10 upcoming events as clickable pins on a map. See `milestones/milestone2_summary.txt` for what was built, results and open issues. The numbered plan below is how it started; the RSS decision further down changed step 1.
 
 1. Scraper also writes `events.json` (UTF-8, HTML entities unescaped, category names trimmed, `all_day` flag for midnight starts)
 2. `data/gt_buildings.json`: ~15–20 buildings with keywords and lat/lng (coordinates taken by hand from Google Maps)
@@ -85,7 +85,7 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 
 Tick items as they're done (`[x]`). A milestone is finished when every item is ticked and its "Done when" is true; then write its `milestones/milestoneN_summary.txt` and move on. Order can change if the user decides so.
 
-### Milestone 2: Events on a map (almost done)
+### Milestone 2: Events on a map (complete, 2026-10-24)
 Done when: `map.html` shows the next 10 events as correctly placed pins with popups, lists every unpinnable event in the same time frame, and the location match rate is known.
 
 - [x] RSS reader writes `events.json` (dedupe across feeds, upcoming only, sanity check)
@@ -95,9 +95,10 @@ Done when: `map.html` shows the next 10 events as correctly placed pins with pop
 - [x] Corrected the buildings flagged as wrong (2026-10-24)
 - [x] Add the user's new locations from `building_loc.txt` to `gt_buildings.json` (2026-10-24; match rate now 86%)
 - [x] Check the remaining `approximate` (red) buildings by eye on the map (2026-10-24; all 57 buildings now checked by the user)
-- [ ] Email GT about the feed problems and the building list (draft written 2026-10-24)
-- [ ] Screenshot of the map in the README
-- [ ] Write `milestones/milestone2_summary.txt` as complete
+- [x] Email GT about the feed problems and the building list (sent 2026-10-24; awaiting reply)
+- [x] Screenshot of the map in the README (`docs/map_milestone2.png`)
+- [x] Merge GT's duplicate postings (same name, start and location but different URLs, e.g. "Georgia Tech Volleyball vs. SMU" and "...-vs-smu-0")
+- [x] Write `milestones/milestone2_summary.txt` as complete
 
 ### Milestone 3: Filters and categories
 Done when: a user can pick a day and time and see only the events happening then, on the map and in the list, with pins colored by our categories.

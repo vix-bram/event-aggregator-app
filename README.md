@@ -5,8 +5,7 @@ A map of what's happening on Georgia Tech's campus, built from the official GT c
 <!-- Add a live demo link here once the app is deployed, e.g.
 **[Live demo](https://your-app.vercel.app)** -->
 
-<!-- Add a screenshot or GIF of the map here, e.g.
-![Map of upcoming events on the Georgia Tech campus](docs/screenshot.png) -->
+![GT Event Map: upcoming events pinned on the Georgia Tech campus map, with one pin's popup open and a side panel listing the online and unlocated events in the same time frame](docs/map_milestone2.png)
 
 ### Why I'm building this
 

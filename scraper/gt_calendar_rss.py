@@ -16,19 +16,22 @@ What this script does, step by step:
    keep each event once, using its link as the ID.
 4. The feeds include events going back years, so we keep only events that
    haven't ended yet.
-5. Before saving, a sanity check makes sure the result looks sane. If it
+5. GT sometimes posts the same event twice, as two pages with different
+   links (".../volleyball-vs-smu" and ".../volleyball-vs-smu-0"). Events
+   with the same name, start time and location are merged into one.
+6. Before saving, a sanity check makes sure the result looks sane. If it
    doesn't, the script stops with an error and leaves the old events.json
    alone, so a GT-side change can't silently wipe the map.
-6. Saves the events to events.json for locate.py and map.html.
+7. Saves the events to events.json for locate.py and map.html.
 
-Known feed problems (as of October 2026, to be reported to GT):
+Known feed problems (as of October 2026, reported to GT on 2026-10-24):
 - "Student sponsored" returns a PHP out-of-memory error instead of RSS
 - "Special event" returns a valid but empty feed
 - The "Seminar/Lecture/Colloquium" link on the feeds page points to the
   Conference/Symposium feed (term 14); the real seminar feed is term 16
 - Events with no category aren't in any feed
-Together these mean the feeds currently cover only ~40% of the events
-shown on the calendar's main page.
+Before the seminar feed (term 16) was added, the feeds covered only ~40%
+of the events shown on the calendar's main page.
 """
 
 import html
@@ -233,6 +236,29 @@ def check_events(events: list[dict]) -> None:
         )
 
 
+def merge_duplicates(events: list[dict]) -> list[dict]:
+    """
+    Merge events GT posted twice under different links.
+
+    Two events are the same posting if their name, start time and location
+    match (ignoring capitalization). We keep the copy with the shorter link,
+    which is the original (GT adds "-0", "-1", ... to the copies), and add
+    any categories or free-food flag the other copy had, so nothing is lost.
+    """
+    kept: dict[tuple, dict] = {}
+    for event in sorted(events, key=lambda e: len(e["url"])):
+        key = (event["name"].lower(), event["start"], event["location"].lower())
+        original = kept.get(key)
+        if original is None:
+            kept[key] = event
+            continue
+        for category in event["categories"]:
+            if category not in original["categories"]:
+                original["categories"].append(category)
+        original["free_food"] = original["free_food"] or event["free_food"]
+    return list(kept.values())
+
+
 def main() -> None:
     events_by_url: dict[str, dict] = {}
     for index, (category, term_id) in enumerate(FEEDS):
@@ -259,9 +285,12 @@ def main() -> None:
         e for e in events_by_url.values()
         if datetime.fromisoformat(e["end"] or e["start"]) >= now
     ]
+    before_merge = len(upcoming)
+    upcoming = merge_duplicates(upcoming)
     upcoming.sort(key=lambda e: e["start"])
 
-    print(f"\n{len(events_by_url)} unique events in the feeds, {len(upcoming)} not yet ended")
+    print(f"\n{len(events_by_url)} unique events in the feeds, {before_merge} not yet ended")
+    print(f"  {before_merge - len(upcoming)} duplicate postings merged, {len(upcoming)} events left")
     print(f"  {sum(e['free_food'] for e in upcoming)} upcoming events list free food")
 
     check_events(upcoming)
