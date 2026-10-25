@@ -9,6 +9,9 @@ What this script does, step by step:
    contains "clough", so it gets Clough's coordinates.
 3. Labels every event with a location_status:
      matched      -> found a building; lat/lng added
+     off_campus   -> found a place, but it's marked "off_campus" in
+                     gt_buildings.json (e.g. a building at Emory), so it
+                     goes in the map's list instead of getting a pin
      online       -> Online / Virtual / TBD etc., nothing to pin
      unmatched    -> has a location, but no keyword matched (yet)
      no_location  -> the event didn't list a location at all
@@ -16,7 +19,7 @@ What this script does, step by step:
    including the most common unmatched locations. That list is your
    to-do list for adding buildings or keywords.
 
-Run it after the RSS reader:
+Run this script after running the rss scraper, e.g.:
     venv\\Scripts\\python scraper\\gt_calendar_rss.py
     venv\\Scripts\\python locate.py
 """
@@ -82,7 +85,12 @@ def locate_event(event: dict, buildings: list[dict]) -> None:
         return
 
     building = find_building(location, buildings)
-    if building is not None:
+    if building is not None and building.get("off_campus"):
+        # We know the place, but it's too far away to show on the campus
+        # map, so keep the name and leave out the coordinates.
+        event["building"] = building["name"]
+        event["location_status"] = "off_campus"
+    elif building is not None:
         event["building"] = building["name"]
         event["lat"] = building["lat"]
         event["lng"] = building["lng"]
@@ -97,14 +105,15 @@ def print_summary(events: list[dict]) -> None:
     statuses = Counter(e["location_status"] for e in events)
     total = len(events)
     print(f"Located {total} events:")
-    for status in ["matched", "unmatched", "online", "no_location"]:
+    for status in ["matched", "off_campus", "unmatched", "online", "no_location"]:
         count = statuses[status]
         print(f"  {status:<12} {count:>4}  ({count / total:.0%})")
 
-    in_person = statuses["matched"] + statuses["unmatched"]
+    # Off-campus events count as matched here: we did recognize the place.
+    recognized = statuses["matched"] + statuses["off_campus"]
+    in_person = recognized + statuses["unmatched"]
     if in_person:
-        print(f"\nMatch rate for in-person events: "
-              f"{statuses['matched'] / in_person:.0%}")
+        print(f"\nMatch rate for in-person events: {recognized / in_person:.0%}")
 
     unmatched = Counter(
         e["location"] for e in events if e["location_status"] == "unmatched"

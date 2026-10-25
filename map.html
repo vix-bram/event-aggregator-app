@@ -16,10 +16,12 @@
      the same time frame as the pins, so no event is hidden just because
      it has no pin.
 
-  How to open it (browsers won't let a page opened straight from disk,
-  i.e. file:///..., read events.json):
+  Make sure to run scraper/gt_calendar_rss.py and locate.py first, so
+  events.json exists and has coordinates. All in order:
+      venv\Scripts\python scraper\gt_calendar_rss.py
+      venv\Scripts\python locate.py
       venv\Scripts\python -m http.server 8000
-  then visit http://localhost:8000/map.html
+      visit http://localhost:8000/map.html
 -->
 <html lang="en">
 <head>
@@ -120,6 +122,7 @@
     // location_status locate.py gave each event.
     const UNMAPPED_SECTIONS = [
       { status: "online", title: "Online" },
+      { status: "off_campus", title: "Off campus" },
       { status: "unmatched", title: "Location not on the map" },
       { status: "no_location", title: "No location listed" },
     ];

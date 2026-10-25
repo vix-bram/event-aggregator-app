@@ -8,18 +8,19 @@
     ],
     "lat": 33.77436,
     "lng": -84.39646,
-    "source": "wikipedia"
+    "source": "google_maps"
   },
   {
     "id": "student-center",
     "name": "John Lewis Student Center",
     "keywords": [
       "student center",
-      "tech rec"
+      "tech rec",
+      "ehmer"
     ],
     "lat": 33.7737,
     "lng": -84.39845,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "exhibition-hall",
@@ -42,7 +43,7 @@
     ],
     "lat": 33.77895,
     "lng": -84.39598,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "west-village",
@@ -50,9 +51,9 @@
     "keywords": [
       "west village"
     ],
-    "lat": 33.7796,
-    "lng": -84.40465,
-    "source": "approximate"
+    "lat": 33.77941,
+    "lng": -84.40487,
+    "source": "google_maps"
   },
   {
     "id": "petit",
@@ -109,7 +110,7 @@
     ],
     "lat": 33.7743,
     "lng": -84.3959,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "crosland",
@@ -120,7 +121,7 @@
     ],
     "lat": 33.77425,
     "lng": -84.39535,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "whitaker",
@@ -128,8 +129,8 @@
     "keywords": [
       "whitaker"
     ],
-    "lat": 33.77839,
-    "lng": -84.39689,
+    "lat": 33.77847,
+    "lng": -84.39682,
     "source": "google_maps"
   },
   {
@@ -150,7 +151,7 @@
     ],
     "lat": 33.7725,
     "lng": -84.39278,
-    "source": "wikipedia"
+    "source": "google_maps"
   },
   {
     "id": "mccamish",
@@ -160,7 +161,7 @@
     ],
     "lat": 33.78083,
     "lng": -84.39278,
-    "source": "wikipedia"
+    "source": "google_maps"
   },
   {
     "id": "coda",
@@ -204,7 +205,7 @@
     ],
     "lat": 33.77355,
     "lng": -84.39495,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "mason",
@@ -214,7 +215,7 @@
     ],
     "lat": 33.7766,
     "lng": -84.3988,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "instructional-center",
@@ -224,7 +225,7 @@
     ],
     "lat": 33.77555,
     "lng": -84.4013,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "klaus",
@@ -234,7 +235,7 @@
     ],
     "lat": 33.7771,
     "lng": -84.39625,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "ccb",
@@ -245,7 +246,7 @@
     ],
     "lat": 33.77725,
     "lng": -84.39735,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "kendeda",
@@ -255,7 +256,7 @@
     ],
     "lat": 33.7788,
     "lng": -84.3994,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "crc",
@@ -266,7 +267,7 @@
     ],
     "lat": 33.7756,
     "lng": -84.4035,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "skiles",
@@ -276,7 +277,7 @@
     ],
     "lat": 33.7737,
     "lng": -84.3962,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "van-leer",
@@ -298,7 +299,7 @@
     ],
     "lat": 33.7774,
     "lng": -84.3988,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "boggs",
@@ -308,7 +309,7 @@
     ],
     "lat": 33.7758,
     "lng": -84.3996,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "tech-green",
@@ -329,7 +330,7 @@
     ],
     "lat": 33.77095,
     "lng": -84.3914,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "brittain",
@@ -339,7 +340,7 @@
     ],
     "lat": 33.77225,
     "lng": -84.39125,
-    "source": "approximate"
+    "source": "google_maps"
   },
   {
     "id": "sos-garden",
@@ -572,6 +573,38 @@
     ],
     "lat": 33.77676,
     "lng": -84.40372,
+    "source": "google_maps"
+  },
+  {
+    "id": "ehs",
+    "name": "Environmental Health and Safety (EHS) Building",
+    "keywords": [
+      "793 marietta",
+      "environmental health and safety"
+    ],
+    "lat": 33.77432,
+    "lng": -84.40474,
+    "source": "google_maps"
+  },
+  {
+    "id": "randall-rollins",
+    "name": "R. Randall Rollins Building (Emory University)",
+    "keywords": [
+      "randall rollins"
+    ],
+    "lat": 33.79742,
+    "lng": -84.32325,
+    "source": "google_maps",
+    "off_campus": true
+  },
+  {
+    "id": "academy-of-medicine",
+    "name": "Historic Academy of Medicine",
+    "keywords": [
+      "academy of medicine"
+    ],
+    "lat": 33.77836,
+    "lng": -84.38682,
     "source": "google_maps"
   }
 ]

@@ -77,11 +77,60 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 * The user is also asking GT whether it has an official list of buildings with coordinates
 * A pre-save sanity check stops the run (and keeps the old `events.json`) if 0 events are found or most lack a name or location
 
-**Checking building coordinates:** each building in `data/gt_buildings.json` has a `source` (`approximate` = Claude's unverified estimate, `wikipedia`, `google_maps` = picked by the user). The user checks them by eye on `map.html`, where "Show all building points" colors the dots by source (red = unverified). When the user sends a corrected coordinate, set that building's `source` to `google_maps`.
+**Checking building coordinates:** each building in `data/gt_buildings.json` has a `source` (`approximate` = Claude's unverified estimate, `wikipedia`, `google_maps` = picked by the user). The user checks them by eye on `map.html`, where "Show all building points" colors the dots by source (red = unverified). When the user sends a corrected coordinate, set that building's `source` to `google_maps`. Places too far away for the campus map (e.g. R. Randall Rollins at Emory) get `"off_campus": true`: `locate.py` labels their events `off_campus` (no lat/lng) and the map lists them in an "Off campus" section instead of pinning them.
 
-**Product rule (user, 2026-10-24): users must be able to see every event GT publishes in their chosen time frame, not just the ones we can pin.** Events that are online, have no location, or whose location can't be matched (e.g. Rollins, Chapin, Holland Plant, whose positions the user doesn't know) will go in a separate list in the app, showing whatever the RSS feed gives. Don't guess coordinates for unknown places to force them onto the map.
+**Product rule (user, 2026-10-24): users must be able to see every event GT publishes in their chosen time frame, not just the ones we can pin.** Events that are online, have no location, or whose location can't be matched (e.g. Chapin, Holland Plant, whose positions the user doesn't know) will go in a separate list in the app, showing whatever the RSS feed gives. Don't guess coordinates for unknown places to force them onto the map.
 
-**After that:** list of online/unmapped events; time filter and color-coded pins; then decide (rules vs. LLM) for unmatched locations; then Firebase storage; then more sources.
+## Milestone Checklists
+
+Tick items as they're done (`[x]`). A milestone is finished when every item is ticked and its "Done when" is true; then write its `milestones/milestoneN_summary.txt` and move on. Order can change if the user decides so.
+
+### Milestone 2: Events on a map (almost done)
+Done when: `map.html` shows the next 10 events as correctly placed pins with popups, lists every unpinnable event in the same time frame, and the location match rate is known.
+
+- [x] RSS reader writes `events.json` (dedupe across feeds, upcoming only, sanity check)
+- [x] `locate.py` matches locations to buildings and reports the match rate (~81% of in-person events)
+- [x] `map.html`: pins grouped by building, popups, building dots colored by coordinate source
+- [x] Panel listing online / unmatched / no-location events for the same time frame as the pins
+- [x] Corrected the buildings flagged as wrong (2026-10-24)
+- [x] Add the user's new locations from `building_loc.txt` to `gt_buildings.json` (2026-10-24; match rate now 86%)
+- [x] Check the remaining `approximate` (red) buildings by eye on the map (2026-10-24; all 57 buildings now checked by the user)
+- [ ] Email GT about the feed problems and the building list (draft written 2026-10-24)
+- [ ] Screenshot of the map in the README
+- [ ] Write `milestones/milestone2_summary.txt` as complete
+
+### Milestone 3: Filters and categories
+Done when: a user can pick a day and time and see only the events happening then, on the map and in the list, with pins colored by our categories.
+
+- [ ] Date/time filter; pins and the unmapped panel both follow it (replaces "next 10 events")
+- [ ] Map GT's categories to ours (free food, social, professional, sports, academic, arts) with keyword rules; free food comes from the feed's Extras field
+- [ ] Registration-required flag (e.g. from related links like "Register" / "RSVP"); measure how often the rule is wrong
+- [ ] Color-coded pins by category, with a legend
+- [ ] Popups show category, free food and registration
+- [ ] Measure the unmatched locations again; decide rules vs. LLM (default: rules)
+
+### Milestone 4: Automatic updates and a public site
+Done when: a public URL shows events that refresh on their own every ~6 hours, and a failed refresh sends an email.
+
+- [ ] GitHub Actions job runs `gt_calendar_rss.py` + `locate.py` on a schedule (the sanity check makes a broken run fail visibly)
+- [ ] Deploy to Vercel
+- [ ] Google Maps key restricted to the deployed domain (plus localhost for development)
+- [ ] Live demo link in the README
+
+### Milestone 5: Database (Firebase)
+Done when: events are stored in Firestore and the site reads them from there.
+
+- [ ] Decide first whether it's needed: for read-only data refreshed every few hours, a static `events.json` may be enough. Firestore earns its place once there are user features (saved events, accounts) or many sources
+- [ ] Firestore schema; scheduled job writes events there
+- [ ] Site reads from Firestore
+
+### Milestone 6: More sources
+Done when: events from at least one more source appear alongside the calendar's, without duplicates.
+
+- [ ] Engage (gatech.campuslabs.com): check for an official feed/API and its terms first, as with the calendar
+- [ ] GT Athletics (ramblinwreck.com)
+- [ ] Remove duplicates across sources (same event posted in two places)
+- [ ] LLM only for sources plain parsing can't handle
 
 ## Repository Notes
 
