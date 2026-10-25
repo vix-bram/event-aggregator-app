@@ -17,12 +17,11 @@ It's being built for Georgia Tech first. The goal is to eventually expand to col
 
 **Working now**
 * Reads upcoming events from the official [GT campus calendar RSS feeds](https://calendar.gatech.edu/rss-feeds), combining events that appear in more than one category feed
-* Matches free-text locations ("Room 357, Clough Undergraduate Learning Commons") to campus buildings with known coordinates, and recognizes online/TBD events that can't be pinned
+* Matches free-text locations ("Room 357, Clough Undergraduate Learning Commons") to campus buildings with known coordinates, and recognizes online/TBD events that can't be pinned - display these in a side panel
 * Shows the next upcoming events as pins on a Google Map of campus, one pin per building, with a popup listing each building's events
 * Flags events that offer free food in the event data, using the calendar's own "Extras" field (not shown on the map yet)
 
 **Planned**
-* A list of online events and events whose location can't be placed on the map, so no event is hidden just because it has no pin
 * Filter by date and time ("show me events on Thursday at 4pm")
 * Color-coded pins by category (free food, social, professional, sports, academic, arts)
 * Filters for free food and registration required
@@ -40,7 +39,7 @@ It's being built for Georgia Tech first. The goal is to eventually expand to col
 
 * **Official feeds instead of scraping.** The first version pulled events out of the calendar's web page. I switched to GT's published RSS feeds because that's the channel GT offers for reusing its event data. Checking the feeds against the page showed they covered only about 40% of upcoming events: one feed is broken, one is empty, one category's link points to the wrong feed (I found the right one by its ID), and events with no category aren't in any feed. I documented these issues to report to GT rather than quietly working around them. The reader identifies itself in its User-Agent and pauses between requests.
 * **No LLM where plain code works.** The feeds are already structured (labeled sections for time, location, fee and extras), so plain Python parsing gives exact results. An LLM would add cost, latency and randomness without improving the data. I'll only consider one for messy sources, after measuring what simple rules miss.
-* **Location matching with measurable results.** Event locations are free text written by whoever posted the event, often down to the room. `locate.py` matches whole-word building keywords (so "crc" doesn't match inside another word) and labels every event as matched, unmatched, online or no location. It prints the match rate (currently about 80% of in-person events) and the most common unmatched locations, which is my to-do list for improving it.
+* **Location matching with measurable results.** Event locations are free text written by whoever posted the event, often down to the room. `locate.py` matches whole-word building keywords (so "crc" doesn't match inside another word) and labels every event as matched, unmatched, online or no location. It prints the match rate (currently about 86% of in-person events) and the most common unmatched locations, which is my to-do list for improving it.
 * **Fail loudly instead of silently.** If a run finds no events, or most events come back without a name or location (a sign the feed format changed), the reader stops with an error and keeps the previous `events.json`, so the map never quietly goes blank.
 * **One pin per building.** Events in the same building are grouped into one numbered pin, instead of several pins stacked exactly on top of each other.
 
