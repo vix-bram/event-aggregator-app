@@ -62,10 +62,11 @@ You need Python 3 and a Google Maps JavaScript API key. Run these commands from 
    ```bash
    cp config.example.js config.js
    ```
-4. Download the latest events and match each one to a campus building. Both scripts write to `events.json`, so run them in this order, and run both again whenever you want fresh events:
+4. Download the latest events, match each one to a campus building, and label its category, free food and registration. All three scripts write to `events.json`, so run them in this order, and run all three again whenever you want fresh events:
    ```bash
    venv/Scripts/python scraper/gt_calendar_rss.py
    venv/Scripts/python locate.py
+   venv/Scripts/python categorize.py
    ```
 5. Start a local server and open http://localhost:8000/map.html in your browser:
    ```bash

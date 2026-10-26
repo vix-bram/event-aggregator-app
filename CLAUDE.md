@@ -6,7 +6,7 @@ Campus events at Georgia Tech are scattered across dozens of sources: department
 
 ## The Goal
 
-Build a web app that automatically scrapes publicly available Georgia Tech webpages for event information, parses it into structured data (plain code where the page is structured; an LLM only where plain code isn't enough), stores it in a database, and displays events as color-coded pins on an interactive Google Maps interface of the GT campus.
+Build a web app that automatically scrapes publicly available Georgia Tech webpages for event information, parses it into structured data (plain code where the page is structured; an LLM only where plain code isn't enough), stores it in a database, and displays events as pins, filterable by category, on an interactive Google Maps interface of the GT campus.
 
 ## Core Features
 
@@ -14,13 +14,13 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 * **Parsing**: Turn each source into structured event data (name, date, time, location, description, category). Structured sources like calendar.gatech.edu are parsed with plain Python; an LLM (e.g. Gemini) is reserved for messy sources or fields rules can't handle
 * **Location matching**: Free-text locations ("Room 357, Clough Undergraduate Learning Commons") are matched to a campus building with known coordinates so they can be pinned
 * **Database storage**: Parsed events are stored in Firebase so the app doesn't have to re-scrape every time a user opens it
-* **Map interface**: Events are displayed as pins on a Google Map centered on the GT campus, color-coded by category (e.g. free food, social, professional, sports)
+* **Map interface**: Events are displayed as pins on a Google Map centered on the GT campus, filterable by category with checkboxes (e.g. food, social, professional, sports)
 * **Time filtering**: Users can set a specific date and time to see only events happening at that time (e.g. "show me events on Thursday at 4pm")
 * **Event popups**: Tapping a pin shows a card with event details (name, time, location, description, registration required or not)
 
 ## Event Categories
 
-* Free food
+* Food (whether it is free is for the student to check)
 * Social
 * Professional / career
 * Sports / recreation
@@ -81,6 +81,15 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 
 **Product rule (user, 2026-10-24): users must be able to see every event GT publishes in their chosen time frame, not just the ones we can pin.** Events that are online, have no location, or whose location can't be matched (e.g. Chapin, Holland Plant, whose positions the user doesn't know) will go in a separate list in the app, showing whatever the RSS feed gives. Don't guess coordinates for unknown places to force them onto the map.
 
+**Milestone 3 (in progress, started 2026-10-26):** pipeline is now `scraper/gt_calendar_rss.py` → `locate.py` → `categorize.py` → `map.html`.
+
+* The RSS reader also stores `details` (the event's full write-up), used only by `categorize.py` for registration/food clues
+* `categorize.py` sets `our_categories`: every category that fits (food, social, professional, sports, academic, arts, other), with `category_reasons` naming the rule behind each. It also sets `registration_required` (register/RSVP/sign up/tickets in links, location, fee or write-up; "Registrar" doesn't match) with `registration_reason`. Name keywords catch what GT's vague tags miss. GT's broad tags (Training/Workshop, Student sponsored) count only when nothing else matched. Holidays and closures fall to `other` on purpose
+* **"Food", not "free food" (user, 2026-10-26):** whether food is free (or only for registered people) is for the student to check on the event page. Food comes from GT's "Free food" Extras tag, food words in the name, or "lunch will be served"-style phrases. The RSS reader's `free_food` field stays as GT's raw tag
+* Tickets count as "registration required" (sports games)
+* **Map design (user, 2026-10-26):** no category colors. All pins are black; students tick category checkboxes (all ticked by default, OR logic) to choose what shows. The time frame is Today / Tomorrow / Next 7 days (starting today) / Select a date, with no time-of-day picker. Events that have already ended are hidden
+* The user has emailed GT about the missing/broken/empty feeds (2026-10-26), hoping fixed feeds give every event a GT category. When GT replies, re-run the pipeline and re-measure how many events `categorize.py` decides by name, by GT tag, or not at all
+
 ## Milestone Checklists
 
 Tick items as they're done (`[x]`). A milestone is finished when every item is ticked and its "Done when" is true; then write its `milestones/milestoneN_summary.txt` and move on. Order can change if the user decides so.
@@ -101,14 +110,14 @@ Done when: `map.html` shows the next 10 events as correctly placed pins with pop
 - [x] Write `milestones/milestone2_summary.txt` as complete
 
 ### Milestone 3: Filters and categories
-Done when: a user can pick a day and time and see only the events happening then, on the map and in the list, with pins colored by our categories.
+Done when: a user can pick a time frame and categories and see only those events, on the map and in the list. (Changed by the user on 2026-10-26: originally "pick a day and time", with pins colored by category.)
 
-- [ ] Date/time filter; pins and the unmapped panel both follow it (replaces "next 10 events")
-- [ ] Map GT's categories to ours (free food, social, professional, sports, academic, arts) with keyword rules; free food comes from the feed's Extras field
-- [ ] Registration-required flag (e.g. from related links like "Register" / "RSVP"); measure how often the rule is wrong
-- [ ] Color-coded pins by category, with a legend
-- [ ] Popups show category, free food and registration
-- [ ] Measure the unmatched locations again; decide rules vs. LLM (default: rules)
+- [ ] Time frame filter (Today / Tomorrow / Next 7 days / a date); pins and the unmapped panel both follow it (replaces "next 10 events"). Built 2026-10-26, awaiting the user's check in the browser
+- [x] Map GT's categories to ours (food, social, professional, sports, academic, arts) with keyword rules, several per event; food from the feed's Extras field, the name or the write-up (2026-10-26, `categorize.py`)
+- [x] Registration-required flag (e.g. from related links like "Register" / "RSVP"); measure how often the rule is wrong (2026-10-26: 89 of 219 flagged; hand check found 1 clearly wrong, 2 doubtful, ~3%; no misses found in the text of the unflagged events)
+- [ ] Category checkboxes (with counts) filter the black pins and the list. Built 2026-10-26, awaiting the user's check in the browser
+- [ ] Popups show categories (including food) and registration. Built 2026-10-26, awaiting the user's check in the browser
+- [x] Measure the unmatched locations again; decide rules vs. LLM (default: rules) (2026-10-26: 83% match rate, 18 unmatched, mostly facilities break rooms and far-off places; decision: rules, no LLM)
 
 ### Milestone 4: Automatic updates and a public site
 Done when: a public URL shows events that refresh on their own every ~6 hours, and a failed refresh sends an email.

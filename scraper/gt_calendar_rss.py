@@ -22,7 +22,8 @@ What this script does, step by step:
 6. Before saving, a sanity check makes sure the result looks sane. If it
    doesn't, the script stops with an error and leaves the old events.json
    alone, so a GT-side change can't silently wipe the map.
-7. Saves the events to events.json for locate.py and map.html.
+7. Saves the events to events.json for locate.py, categorize.py and
+   map.html.
 
 Known feed problems (as of October 2026, reported to GT on 2026-10-24):
 - "Student sponsored" returns a PHP out-of-memory error instead of RSS
@@ -195,6 +196,9 @@ def parse_item(item: ET.Element) -> dict | None:
 
     fee_lines = section_lines(sections.get("Fee", ""))
     summary_lines = section_lines(sections.get("Summary sentence", ""))
+    # The full write-up. Not shown on the map, but categorize.py reads it
+    # for clues like "RSVP at ..." or "lunch will be served".
+    detail_lines = section_lines(sections.get("Summary", ""))
 
     categories = []
     for link in links_under_heading(soup, "Event categories"):
@@ -210,6 +214,7 @@ def parse_item(item: ET.Element) -> dict | None:
         "all_day": (start.hour, start.minute) == (0, 0),
         "location": location_lines[0] if location_lines else "",
         "description": " ".join(summary_lines),
+        "details": " ".join(detail_lines),
         "categories": categories,
         "free_food": "Free food" in extras,
         "extras": extras,

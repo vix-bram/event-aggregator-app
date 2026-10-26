@@ -1,25 +1,31 @@
 <!DOCTYPE html>
 <!--
-  GT Event Map — Milestone 2.
+  GT Event Map — Milestone 3.
 
   What this page does:
   1. Loads your API key from config.js (untracked by git).
-  2. Loads events.json (written by scraper/gt_calendar_rss.py, then labeled by locate.py).
-  3. Keeps only events that matched a building and haven't ended yet,
-     sorts them by start time, and takes the next 10.
+  2. Loads events.json (written by scraper/gt_calendar_rss.py, then labeled
+     by locate.py and categorize.py).
+  3. Lets you pick a time frame (Today, Tomorrow, Next 7 days, or a date)
+     and the categories you're interested in. An event is shown if any
+     part of it falls in the time frame and hasn't ended yet, and it has at
+     least one of the ticked categories (an event can have several, e.g.
+     Arts and Food).
   4. Groups those events by building, so two events in the Student Center
      become one pin with both events in its popup, instead of two pins
      stacked exactly on top of each other.
-  5. Draws a Google Map of campus with one pin per building.
+  5. Draws a Google Map of campus with one black pin per building; the
+     number on the pin is how many events it has.
   6. Lists the events that can't be pinned (online, no location, or a
-     place we don't have coordinates for) in a panel beside the map, for
-     the same time frame as the pins, so no event is hidden just because
-     it has no pin.
+     place we don't have coordinates for) in a panel beside the map, using
+     the same time frame and categories as the pins, so no event is hidden
+     just because it has no pin.
 
-  Make sure to run scraper/gt_calendar_rss.py and locate.py first, so
-  events.json exists and has coordinates. All in order (in bash):
+  Make sure to run the three scripts first, so events.json exists and has
+  coordinates and categories. All in order (in bash):
       venv/Scripts/python scraper/gt_calendar_rss.py
       venv/Scripts/python locate.py
+      venv/Scripts/python categorize.py
       venv/Scripts/python -m http.server 8000
       visit http://localhost:8000/map.html
 -->
@@ -37,7 +43,23 @@
     }
     header h1 { font-size: 18px; margin: 0; }
     header .status { font-size: 14px; opacity: 0.85; }
-    header label { font-size: 14px; margin-left: auto; cursor: pointer; }
+    header label { font-size: 14px; cursor: pointer; }
+    header .buildings-toggle { margin-left: auto; }
+    #range, #day { font: inherit; font-size: 14px; padding: 3px 6px; border-radius: 4px; border: 1px solid #ccc; }
+    #day[hidden] { display: none; }
+
+    /* Category checkboxes, in a bar under the header. */
+    #categories {
+      display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
+      padding: 8px 16px; background: #f1f3f4; border-bottom: 1px solid #ddd; font-size: 14px;
+    }
+    #categories label { cursor: pointer; white-space: nowrap; }
+    #categories .count { color: #666; }
+    #categories button {
+      font: inherit; font-size: 13px; padding: 1px 8px; cursor: pointer;
+      border: 1px solid #bbb; border-radius: 4px; background: #fff;
+    }
+
     main { flex: 1; display: flex; min-height: 0; }
     #map { flex: 1; }
     #message { padding: 24px; font-size: 16px; line-height: 1.5; }
@@ -74,13 +96,17 @@
       display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3;
       -webkit-box-orient: vertical; overflow: hidden;
     }
+    .event .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
     .event .tag {
-      display: inline-block; margin-top: 4px; padding: 1px 6px; border-radius: 4px;
-      background: #e6f4ea; color: #137333; font-size: 12px; font-weight: 600;
+      padding: 1px 6px; border-radius: 4px; font-size: 12px; font-weight: 600;
+      background: #eee; color: #333;
     }
-    #legend { display: none; gap: 12px; font-size: 13px; }
-    #legend.visible { display: flex; }
-    #legend span::before {
+    .event .tag.food { background: #e6f4ea; color: #137333; }
+    .event .tag.registration { background: #fef7e0; color: #8a5a00; }
+
+    #source-legend { display: none; gap: 12px; font-size: 13px; }
+    #source-legend.visible { display: flex; }
+    #source-legend span::before {
       content: ""; display: inline-block; width: 10px; height: 10px;
       margin-right: 5px; border-radius: 50%; border: 2px solid #fff;
       background: var(--dot); vertical-align: -2px;
@@ -90,14 +116,24 @@
 <body>
   <header>
     <h1>GT Event Map</h1>
+    <select id="range" aria-label="Time frame">
+      <option value="today">Today</option>
+      <option value="tomorrow">Tomorrow</option>
+      <option value="week">Next 7 days</option>
+      <option value="date">Select a date…</option>
+    </select>
+    <!-- Shown only when "Select a date…" is chosen. -->
+    <input type="date" id="day" aria-label="Date" hidden>
     <span class="status" id="status">Loading…</span>
-    <label><input type="checkbox" id="show-buildings"> Show all building points</label>
+    <label class="buildings-toggle"><input type="checkbox" id="show-buildings"> Show all building points</label>
     <!-- Filled in by initMap from SOURCE_COLORS, shown with the building points. -->
-    <div id="legend"></div>
+    <div id="source-legend"></div>
   </header>
+  <!-- Checkboxes are added by buildCategoryBoxes. -->
+  <div id="categories"></div>
   <main>
     <div id="map"></div>
-    <!-- Filled in by showUnmapped once the events have loaded. -->
+    <!-- Filled in by showUnmapped whenever the filters change. -->
     <aside id="unmapped" hidden></aside>
   </main>
 
@@ -106,7 +142,23 @@
   <script src="config.js"></script>
   <script>
     const GT_CENTER = { lat: 33.7765, lng: -84.3980 };
-    const EVENTS_TO_SHOW = 10;
+    const PIN_COLOR = "#000";
+
+    // How long we assume an event lasts when the feed gives no end time.
+    const DEFAULT_LENGTH_MS = 60 * 60 * 1000;
+
+    // Our categories, keyed as categorize.py writes them in our_categories,
+    // in the order the checkboxes show them.
+    const CATEGORIES = [
+      { key: "food",         label: "Food" },
+      { key: "social",       label: "Social" },
+      { key: "professional", label: "Professional / career" },
+      { key: "sports",       label: "Sports / recreation" },
+      { key: "academic",     label: "Academic / lecture" },
+      { key: "arts",         label: "Arts / culture" },
+      { key: "other",        label: "Other" },
+    ];
+    const CATEGORY_LABELS = Object.fromEntries(CATEGORIES.map(c => [c.key, c.label]));
 
     // Building dot colors, by where the building's coordinates came from
     // (the "source" field in gt_buildings.json). Red ones are guesses that
@@ -133,36 +185,119 @@
       document.getElementById("status").textContent = "";
     }
 
+    // "Tue, Oct 14"
+    function formatDay(date) {
+      return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    }
+
     // "2026-10-14T18:00:00-04:00" -> "Tue, Oct 14, 6:00 PM" (or "All day").
     // The times include Atlanta's UTC offset, and the browser shows them
     // in your laptop's time zone, so they're right as long as it's on
-    // Atlanta time.
+    // Atlanta time. The time frame filter makes the same assumption.
     function formatWhen(event) {
       const date = new Date(event.start);
-      const day = date.toLocaleDateString("en-US",
-        { weekday: "short", month: "short", day: "numeric" });
-      if (event.all_day) return `${day} · All day`;
-      const time = date.toLocaleTimeString("en-US",
-        { hour: "numeric", minute: "2-digit" });
-      return `${day}, ${time}`;
+      if (event.all_day) return `${formatDay(date)} · All day`;
+      const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+      return `${formatDay(date)}, ${time}`;
     }
 
-    // Events that haven't ended yet, sorted by start time.
-    function notEnded(events) {
+    // --- Filters -----------------------------------------------------------
+
+    // A Date as "2026-10-26", the format <input type="date"> uses.
+    function toDateValue(date) {
+      const pad = n => String(n).padStart(2, "0");
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+
+    // Midnight at the start of the day `days` after `date`'s day.
+    // new Date(y, m, d + n) handles month ends and daylight saving.
+    function startOfDay(date, days = 0) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+    }
+
+    // The chosen time frame as { from, to, label }. Events that have
+    // already ended are never shown, so "Today" at 3 PM starts at 3 PM.
+    function chosenWindow() {
       const now = new Date();
+      const today = startOfDay(now);
+      const range = document.getElementById("range").value;
+      let start, end, label;
+      if (range === "tomorrow") {
+        start = startOfDay(now, 1); end = startOfDay(now, 2);
+        label = `tomorrow (${formatDay(start)})`;
+      } else if (range === "week") {
+        start = today; end = startOfDay(now, 7);
+        label = `the next 7 days (${formatDay(start)} – ${formatDay(startOfDay(now, 6))})`;
+      } else if (range === "date") {
+        const dayInput = document.getElementById("day");
+        if (!dayInput.value) dayInput.value = toDateValue(now); // the box was cleared
+        const [year, month, day] = dayInput.value.split("-").map(Number);
+        start = new Date(year, month - 1, day); end = startOfDay(start, 1);
+        label = formatDay(start);
+      } else {
+        start = today; end = startOfDay(now, 1);
+        label = `today (${formatDay(start)})`;
+      }
+      return { from: start > now ? start : now, to: end, label };
+    }
+
+    function eventEnd(e) {
+      if (e.end) return new Date(e.end);
+      const length = e.all_day ? 24 * 60 * 60 * 1000 : DEFAULT_LENGTH_MS;
+      return new Date(new Date(e.start).getTime() + length);
+    }
+
+    // Events that overlap the time frame at all, sorted by start time.
+    // Multi-day events (exhibits, Kwanzaa) show on every day they cover.
+    function happeningIn(events, { from, to }) {
       return events
-        .filter(e => new Date(e.end || e.start) >= now)
+        .filter(e => new Date(e.start) < to && eventEnd(e) > from)
         .sort((a, b) => new Date(a.start) - new Date(b.start));
     }
 
-    // Pick the next N located events. If more events start at the same
-    // time as the Nth one, they're all included, so none get cut off.
-    function pickUpcoming(events, count) {
-      const located = notEnded(events).filter(e => e.location_status === "matched");
-      if (located.length <= count) return located;
-      const lastStart = new Date(located[count - 1].start);
-      return located.filter(e => new Date(e.start) <= lastStart);
+    // One checkbox per category, all ticked to start with, plus "All" and
+    // "None" buttons. Calls onChange whenever a box changes.
+    function buildCategoryBoxes(onChange) {
+      const bar = document.getElementById("categories");
+      for (const { key, label } of CATEGORIES) {
+        const box = document.createElement("input");
+        box.type = "checkbox";
+        box.value = key;
+        box.checked = true;
+        box.addEventListener("change", onChange);
+        const count = document.createElement("span");
+        count.className = "count";
+        count.dataset.category = key;
+        const wrapper = document.createElement("label");
+        wrapper.append(box, ` ${label} `, count);
+        bar.append(wrapper);
+      }
+      for (const [text, checked] of [["All", true], ["None", false]]) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = text;
+        button.addEventListener("click", () => {
+          for (const box of bar.querySelectorAll("input")) box.checked = checked;
+          onChange();
+        });
+        bar.append(button);
+      }
     }
+
+    function tickedCategories() {
+      return new Set([...document.querySelectorAll("#categories input:checked")].map(b => b.value));
+    }
+
+    // Show, next to each checkbox, how many events in the time frame have
+    // that category (whether or not the box is ticked).
+    function updateCategoryCounts(eventsInWindow) {
+      for (const span of document.querySelectorAll("#categories .count")) {
+        const count = eventsInWindow.filter(e => e.our_categories.includes(span.dataset.category)).length;
+        span.textContent = `(${count})`;
+      }
+    }
+
+    // --- Pins and cards ----------------------------------------------------
 
     // [event, event, ...] -> { "Clough ...": [event, event], "Klaus ...": [event] }
     function groupByBuilding(events) {
@@ -172,6 +307,13 @@
         groups[e.building].push(e);
       }
       return groups;
+    }
+
+    function buildTag(text, className = "") {
+      const tag = document.createElement("span");
+      tag.className = `tag ${className}`;
+      tag.textContent = text;
+      return tag;
     }
 
     // One event's card, used in both the map popups and the unmapped panel.
@@ -204,12 +346,22 @@
         summary.textContent = e.description;
         item.append(summary);
       }
-      if (e.free_food) {
-        const tag = document.createElement("span");
-        tag.className = "tag";
-        tag.textContent = "Free food";
-        item.append(tag);
+
+      // Tags: each of the event's categories, then registration. Hover a
+      // tag to see which rule set it, e.g. "name: concert".
+      const tags = document.createElement("div");
+      tags.className = "tags";
+      for (const category of e.our_categories) {
+        const tag = buildTag(CATEGORY_LABELS[category] ?? category, category === "food" ? "food" : "");
+        tag.title = e.category_reasons?.[category] ?? "";
+        tags.append(tag);
       }
+      if (e.registration_required) {
+        const tag = buildTag("Registration required", "registration");
+        tag.title = e.registration_reason ?? "";
+        tags.append(tag);
+      }
+      item.append(tags);
       return item;
     }
 
@@ -223,26 +375,19 @@
       return box;
     }
 
-    // Fill the side panel with the events that can't be pinned, for the
-    // same time frame as the pins: everything that hasn't ended and starts
-    // no later than the last pinned event. Returns how many it listed.
-    function showUnmapped(events, pinned) {
-      const windowEnd = pinned.length
-        ? new Date(pinned[pinned.length - 1].start)
-        : null; // no pins at all: list every upcoming unmapped event
-      const unmapped = notEnded(events).filter(e =>
-        e.location_status !== "matched" &&
-        (windowEnd === null || new Date(e.start) <= windowEnd));
+    // Fill the side panel with the shown events that can't be pinned.
+    // Returns how many it listed.
+    function showUnmapped(events, timeFrame) {
+      const unmapped = events.filter(e => e.location_status !== "matched");
 
       const panel = document.getElementById("unmapped");
+      panel.replaceChildren();
       const heading = document.createElement("h2");
       heading.textContent = `Not on the map (${unmapped.length})`;
-      const timeFrame = document.createElement("p");
-      timeFrame.className = "window";
-      timeFrame.textContent = windowEnd
-        ? `Events through ${formatWhen({ start: pinned[pinned.length - 1].start })}, the same time frame as the pins.`
-        : "All upcoming events that can't be pinned.";
-      panel.append(heading, timeFrame);
+      const windowText = document.createElement("p");
+      windowText.className = "window";
+      windowText.textContent = `Events ${timeFrame.label}, with the same categories as the pins.`;
+      panel.append(heading, windowText);
 
       for (const { status, title } of UNMAPPED_SECTIONS) {
         const sectionEvents = unmapped.filter(e => e.location_status === status);
@@ -266,12 +411,16 @@
         ]);
       } catch (err) {
         showMessage(`Couldn't load <code>events.json</code>.<br>
-          Run <code>scraper/gt_calendar_rss.py</code> and <code>locate.py</code> first, and open this page
-          through <code>python -m http.server</code> (not by double-clicking it).`);
+          Run <code>scraper/gt_calendar_rss.py</code>, <code>locate.py</code> and <code>categorize.py</code>
+          first, and open this page through <code>python -m http.server</code> (not by double-clicking it).`);
         return;
       }
       if (!events.some(e => "location_status" in e)) {
         showMessage("<code>events.json</code> has no coordinates yet. Run <code>locate.py</code>, then reload.");
+        return;
+      }
+      if (!events.some(e => "our_categories" in e)) {
+        showMessage("<code>events.json</code> has no categories yet. Run <code>categorize.py</code>, then reload.");
         return;
       }
 
@@ -283,29 +432,60 @@
       const { AdvancedMarkerElement, PinElement } = google.maps.marker;
       const infoWindow = new google.maps.InfoWindow();
 
-      // --- Event pins: one per building; the number is how many events it has.
-      const upcoming = pickUpcoming(events, EVENTS_TO_SHOW);
-      const groups = groupByBuilding(upcoming);
-      for (const [building, buildingEvents] of Object.entries(groups)) {
-        const first = buildingEvents[0];
-        const pin = new PinElement({
-          background: "#B3A369", borderColor: "#003057", // GT gold / navy
-          glyph: String(buildingEvents.length), glyphColor: "#003057",
-        });
-        const marker = new AdvancedMarkerElement({
-          map, position: { lat: first.lat, lng: first.lng },
-          title: building, content: pin.element, gmpClickable: true,
-        });
-        marker.addListener("click", () => {
-          infoWindow.setContent(buildPopup(building, buildingEvents));
-          infoWindow.open({ map, anchor: marker });
-        });
+      // --- Event pins: one per building; the number is how many events it
+      // has. Redrawn, along with the panel, whenever a filter changes.
+      let eventMarkers = [];
+      function render() {
+        for (const m of eventMarkers) m.map = null;
+        eventMarkers = [];
+        infoWindow.close();
+
+        const timeFrame = chosenWindow();
+        const inWindow = happeningIn(events, timeFrame);
+        updateCategoryCounts(inWindow);
+        const ticked = tickedCategories();
+        const shown = inWindow.filter(e => e.our_categories.some(c => ticked.has(c)));
+        const pinned = shown.filter(e => e.location_status === "matched");
+        const groups = groupByBuilding(pinned);
+        for (const [building, buildingEvents] of Object.entries(groups)) {
+          const pin = new PinElement({
+            background: PIN_COLOR, borderColor: PIN_COLOR,
+            glyph: String(buildingEvents.length), glyphColor: "#fff",
+          });
+          const first = buildingEvents[0];
+          const marker = new AdvancedMarkerElement({
+            map, position: { lat: first.lat, lng: first.lng },
+            title: building, content: pin.element, gmpClickable: true,
+          });
+          marker.addListener("click", () => {
+            infoWindow.setContent(buildPopup(building, buildingEvents));
+            infoWindow.open({ map, anchor: marker });
+          });
+          eventMarkers.push(marker);
+        }
+
+        const unmappedCount = showUnmapped(shown, timeFrame);
+        const status = document.getElementById("status");
+        if (!ticked.size) {
+          status.textContent = "Tick at least one category to see events.";
+        } else if (!shown.length) {
+          status.textContent = `No events ${timeFrame.label} in the ticked categories.`;
+        } else {
+          status.textContent = `${pinned.length} events on the map · ` +
+            `${Object.keys(groups).length} buildings · ${unmappedCount} more in the list`;
+        }
       }
 
-      const unmappedCount = showUnmapped(events, upcoming);
-      document.getElementById("status").textContent = upcoming.length
-        ? `Next ${upcoming.length} events on the map · ${Object.keys(groups).length} buildings · ${unmappedCount} more in the list`
-        : "No upcoming mappable events. Re-run scraper/gt_calendar_rss.py and locate.py for fresh data.";
+      const range = document.getElementById("range");
+      const dayInput = document.getElementById("day");
+      range.addEventListener("change", () => {
+        dayInput.hidden = range.value !== "date";
+        if (range.value === "date") dayInput.focus();
+        render();
+      });
+      dayInput.addEventListener("change", render);
+      buildCategoryBoxes(render);
+      render();
 
       // --- Building reference points: a small dot for every building in
       // gt_buildings.json, colored by where its coordinates came from, so
@@ -324,18 +504,18 @@
       });
 
       // Legend: one entry per source, with how many buildings use it.
-      const legend = document.getElementById("legend");
+      const sourceLegend = document.getElementById("source-legend");
       for (const [source, { color, label }] of Object.entries(SOURCE_COLORS)) {
         const count = buildings.filter(b => b.source === source).length;
         const entry = document.createElement("span");
         entry.style.setProperty("--dot", color);
         entry.textContent = `${label} (${count})`;
-        legend.append(entry);
+        sourceLegend.append(entry);
       }
 
       document.getElementById("show-buildings").addEventListener("change", ev => {
         for (const m of buildingMarkers) m.map = ev.target.checked ? map : null;
-        legend.classList.toggle("visible", ev.target.checked);
+        sourceLegend.classList.toggle("visible", ev.target.checked);
       });
     }
 
@@ -354,6 +534,10 @@
       document.head.append(script);
     }
 
+    // The date box (for "Select a date…") starts at today, and can't go
+    // into the past, since events.json only has events that haven't ended.
+    document.getElementById("day").value = toDateValue(new Date());
+    document.getElementById("day").min = toDateValue(new Date());
     loadGoogleMaps();
   </script>
 </body>
