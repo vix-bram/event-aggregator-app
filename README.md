@@ -53,16 +53,22 @@ You need Python 3 and a Google Maps JavaScript API key. Run these commands from 
    python -m venv venv
    venv/Scripts/pip install -r requirements.txt
    ```
-2. Add your API key: copy `config.example.js` to `config.js` and paste your key into it. `config.js` is gitignored, so your key stays off GitHub.
+
+2. If the environment is not activated, activate it:
+   ```bash
+   source venv/Scripts/activate
+   ```
+
+3. Add your API key: copy `config.example.js` to `config.js` and paste your key into it. `config.js` is gitignored, so your key stays off GitHub.
    ```bash
    cp config.example.js config.js
    ```
-3. Download the latest events and match each one to a campus building. Both scripts write to `events.json`, so run them in this order, and run both again whenever you want fresh events:
+4. Download the latest events and match each one to a campus building. Both scripts write to `events.json`, so run them in this order, and run both again whenever you want fresh events:
    ```bash
    venv/Scripts/python scraper/gt_calendar_rss.py
    venv/Scripts/python locate.py
    ```
-4. Start a local server and open http://localhost:8000/map.html in your browser:
+5. Start a local server and open http://localhost:8000/map.html in your browser:
    ```bash
    venv/Scripts/python -m http.server 8000
    ```
