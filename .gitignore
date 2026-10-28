@@ -9,3 +9,5 @@ config.js
 .env
 events.txt
 building_loc.txt
+# Kept locally only, not published on GitHub
+scraper/gt_calendar_rss.py
