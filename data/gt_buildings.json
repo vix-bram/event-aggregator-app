@@ -185,6 +185,17 @@
     "source": "google_maps"
   },
   {
+    "id": "scheller-tower",
+    "name": "Scheller Tower",
+    "keywords": [
+      "scheller tower",
+      "georgia tower"
+    ],
+    "lat": 33.77707,
+    "lng": -84.38861,
+    "source": "google_maps"
+  },
+  {
     "id": "tech-square",
     "name": "Technology Square",
     "keywords": [

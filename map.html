@@ -14,10 +14,10 @@
   4. Groups those events by building, so two events in the Student Center
      become one pin with both events in its popup, instead of two pins
      stacked exactly on top of each other.
-  5. Draws a Google Map of campus with one black pin per building; the
+  5. Draws a Google Map of campus with one gold pin per building; the
      number on the pin is how many events it has.
   6. Lists the events that can't be pinned (online, no location, or a
-     place we don't have coordinates for) in a panel beside the map, using
+     place we don't have coordinates for) in a panel left of the map, using
      the same time frame and categories as the pins, so no event is hidden
      just because it has no pin.
 
@@ -48,13 +48,14 @@
     #range, #day { font: inherit; font-size: 14px; padding: 3px 6px; border-radius: 4px; border: 1px solid #ccc; }
     #day[hidden] { display: none; }
 
-    /* Category checkboxes, in a bar under the header. */
+    /* Category checkboxes, in a gold bar under the header. */
     #categories {
       display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
-      padding: 8px 16px; background: #f1f3f4; border-bottom: 1px solid #ddd; font-size: 14px;
+      padding: 8px 16px; background: #B3A369; /* GT Tech Gold */
+      color: #003057; border-bottom: 1px solid #8f8254; font-size: 14px;
     }
     #categories label { cursor: pointer; white-space: nowrap; }
-    #categories .count { color: #666; }
+    #categories .count { opacity: 0.75; }
     #categories button {
       font: inherit; font-size: 13px; padding: 1px 8px; cursor: pointer;
       border: 1px solid #bbb; border-radius: 4px; background: #fff;
@@ -64,11 +65,11 @@
     #map { flex: 1; }
     #message { padding: 24px; font-size: 16px; line-height: 1.5; }
 
-    /* Unmapped events panel: beside the map on wide screens, below it on
+    /* Unmapped events panel: left of the map on wide screens, below it on
        phones. */
     #unmapped {
       width: 340px; overflow-y: auto; padding: 12px 16px;
-      border-left: 1px solid #ddd; font-size: 14px; background: #fafafa;
+      border-right: 1px solid #ddd; font-size: 14px; background: #fafafa;
     }
     #unmapped[hidden] { display: none; }
     #unmapped h2 { font-size: 16px; margin: 0 0 2px; }
@@ -81,7 +82,7 @@
     @media (max-width: 700px) {
       main { flex-direction: column; }
       #map { flex: none; height: 60vh; }
-      #unmapped { width: auto; border-left: none; border-top: 1px solid #ddd; overflow: visible; }
+      #unmapped { order: 1; width: auto; border-right: none; border-top: 1px solid #ddd; overflow: visible; }
     }
 
     .popup { max-width: 280px; font-size: 14px; }
@@ -132,9 +133,9 @@
   <!-- Checkboxes are added by buildCategoryBoxes. -->
   <div id="categories"></div>
   <main>
-    <div id="map"></div>
     <!-- Filled in by showUnmapped whenever the filters change. -->
     <aside id="unmapped" hidden></aside>
+    <div id="map"></div>
   </main>
 
   <!-- config.js defines window.GOOGLE_MAPS_API_KEY. If it's missing,
@@ -142,7 +143,7 @@
   <script src="config.js"></script>
   <script>
     const GT_CENTER = { lat: 33.7765, lng: -84.3980 };
-    const PIN_COLOR = "#000";
+    const PIN_COLORS = { background: "#B3A369", border: "#003057" }; // GT gold / navy
 
     // How long we assume an event lasts when the feed gives no end time.
     const DEFAULT_LENGTH_MS = 60 * 60 * 1000;
@@ -449,8 +450,8 @@
         const groups = groupByBuilding(pinned);
         for (const [building, buildingEvents] of Object.entries(groups)) {
           const pin = new PinElement({
-            background: PIN_COLOR, borderColor: PIN_COLOR,
-            glyph: String(buildingEvents.length), glyphColor: "#fff",
+            background: PIN_COLORS.background, borderColor: PIN_COLORS.border,
+            glyph: String(buildingEvents.length), glyphColor: PIN_COLORS.border,
           });
           const first = buildingEvents[0];
           const marker = new AdvancedMarkerElement({
