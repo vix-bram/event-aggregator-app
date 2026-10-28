@@ -90,13 +90,10 @@
     .popup .event { margin: 0 0 10px; }
     .popup .event:last-child { margin-bottom: 0; }
     .event .name { font-weight: 600; }
-    .event .meta { color: #555; }
-    .event .summary {
-      margin-top: 4px; color: #333;
-      /* Long summaries are cut to 3 lines; the link has the full details. */
-      display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3;
-      -webkit-box-orient: vertical; overflow: hidden;
-    }
+    /* The time stands out (dark); the location sits under it, smaller
+       and lighter, so the two are easy to tell apart. */
+    .event .when { color: #1a1a1a; margin-top: 2px; }
+    .event .where { color: #6b6b6b; font-size: 12px; margin-top: 1px; }
     .event .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
     .event .tag {
       padding: 1px 6px; border-radius: 4px; font-size: 12px; font-weight: 600;
@@ -338,7 +335,7 @@
     // Built with DOM methods + textContent rather than pasting strings into
     // HTML, so an event name containing "<" or a <script> tag can't break
     // or hijack the page.
-    function buildEventItem(e, { showSummary }) {
+    function buildEventItem(e) {
       const item = document.createElement("div");
       item.className = "event";
       const name = document.createElement("a");
@@ -348,21 +345,15 @@
       name.rel = "noopener";
       name.textContent = e.name;
       const when = document.createElement("div");
-      when.className = "meta";
+      when.className = "when";
       when.textContent = formatWhen(e);
       item.append(name, when);
 
       if (e.location) {
         const where = document.createElement("div");
-        where.className = "meta";
+        where.className = "where";
         where.textContent = e.location;
         item.append(where);
-      }
-      if (showSummary && e.description) {
-        const summary = document.createElement("div");
-        summary.className = "summary";
-        summary.textContent = e.description;
-        item.append(summary);
       }
 
       // Tags: each of the event's categories, then registration. Hover a
@@ -389,7 +380,7 @@
       const title = document.createElement("h2");
       title.textContent = building;
       box.append(title);
-      for (const e of events) box.append(buildEventItem(e, { showSummary: false }));
+      for (const e of events) box.append(buildEventItem(e));
       return box;
     }
 
@@ -413,7 +404,7 @@
         const sectionTitle = document.createElement("h3");
         sectionTitle.textContent = `${title} (${sectionEvents.length})`;
         panel.append(sectionTitle);
-        for (const e of sectionEvents) panel.append(buildEventItem(e, { showSummary: true }));
+        for (const e of sectionEvents) panel.append(buildEventItem(e));
       }
       panel.hidden = false;
       return unmapped.length;
