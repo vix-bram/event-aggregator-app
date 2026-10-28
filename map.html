@@ -176,7 +176,7 @@
     const UNMAPPED_SECTIONS = [
       { status: "online", title: "Online" },
       { status: "off_campus", title: "Off campus" },
-      { status: "unmatched", title: "Location not on the map" },
+      { status: "unmatched", title: "Location not matched/found" },
       { status: "no_location", title: "No location listed" },
     ];
 
@@ -191,15 +191,32 @@
       return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
     }
 
-    // "2026-10-14T18:00:00-04:00" -> "Tue, Oct 14, 6:00 PM" (or "All day").
+    // "6:00 PM"
+    function formatTime(date) {
+      return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    }
+
+    // The event's start and end, e.g.
+    //   "Tue, Oct 14, 6:00 PM – 8:30 PM"
+    //   "Mon, Mar 1, 12:00 PM – Tue, Mar 2, 5:00 PM"  (ends another day)
+    //   "Thu, Nov 26 – Fri, Nov 27 · All day"
+    //   "Tue, Oct 14, 6:00 PM"                         (no end time given)
     // The times include Atlanta's UTC offset, and the browser shows them
     // in your laptop's time zone, so they're right as long as it's on
     // Atlanta time. The time frame filter makes the same assumption.
     function formatWhen(event) {
-      const date = new Date(event.start);
-      if (event.all_day) return `${formatDay(date)} · All day`;
-      const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-      return `${formatDay(date)}, ${time}`;
+      const start = new Date(event.start);
+      const end = event.end ? new Date(event.end) : null;
+      const sameDay = end && formatDay(end) === formatDay(start);
+      if (event.all_day) {
+        return end && !sameDay
+          ? `${formatDay(start)} – ${formatDay(end)} · All day`
+          : `${formatDay(start)} · All day`;
+      }
+      const from = `${formatDay(start)}, ${formatTime(start)}`;
+      if (!end) return from;
+      if (sameDay) return `${from} – ${formatTime(end)}`;
+      return `${from} – ${formatDay(end)}, ${formatTime(end)}`;
     }
 
     // --- Filters -----------------------------------------------------------
@@ -406,9 +423,11 @@
     async function initMap() {
       let events, buildings;
       try {
+        // "no-cache" makes the browser check for a newer file every time,
+        // so rerunning the pipeline shows up on a normal reload.
         [events, buildings] = await Promise.all([
-          fetch("events.json").then(r => r.json()),
-          fetch("data/gt_buildings.json").then(r => r.json()),
+          fetch("events.json", { cache: "no-cache" }).then(r => r.json()),
+          fetch("data/gt_buildings.json", { cache: "no-cache" }).then(r => r.json()),
         ]);
       } catch (err) {
         showMessage(`Couldn't load <code>events.json</code>.<br>

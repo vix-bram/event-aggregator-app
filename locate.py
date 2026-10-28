@@ -41,9 +41,12 @@ BUILDINGS_PATH = PROJECT_ROOT / "data" / "gt_buildings.json"
 # "CODA Building 9th floor Atrium & Virtual" still gets pinned at CODA.
 ONLINE_KEYWORDS = [
     "online", "virtual", "zoom", "teams", "discord", "webinar", "hybrid",
-    "tbd", "tba", "related link", "registration required",
-    "georgia tech campus", "off-site", "vitual", "various",
+    "tbd", "tba", "related link", "registration required", "vitual",
 ]
+# "Georgia Tech Campus", "Off-site" and "Various" are not in the list on
+# purpose: they're in person, just too vague to pin, so they land in
+# unmatched, where the map lists them under "Location not matched/found"
+# with their text.
 
 
 def normalize(text: str) -> str:
