@@ -10,4 +10,4 @@ config.js
 events.txt
 building_loc.txt
 # Kept locally only, not published on GitHub
-scraper/gt_calendar_rss.py
+scraper/gt_calendar_scraper.py
