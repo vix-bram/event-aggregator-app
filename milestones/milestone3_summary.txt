@@ -1,0 +1,121 @@
+MILESTONE 3 SUMMARY
+===================
+
+Status: Complete (October 28, 2026). Started October 26, 2026.
+
+Objective
+---------
+Let students choose which events they see: by time frame and by category,
+on the map and in the list of events that can't be pinned.
+
+Done when: a user can pick a time frame and categories and see only those
+events, on the map and in the list. This is true. (The goal was changed on
+October 26: originally "pick a day and time", with pins colored by
+category.)
+
+What Was Accomplished
+---------------------
+
+1. Categories, food and registration (categorize.py)
+   - New step in the pipeline, run after locate.py:
+     gt_calendar_rss.py -> locate.py -> categorize.py -> map.html
+   - Food: from GT's "Free food" Extras tag, food words in the name, or
+     phrases like "lunch will be served" in the write-up. Called "Food",
+     not "Free food": whether it's free is for the student to check
+   - Registration required: register / RSVP / sign up / tickets in the
+     related links, location, fee or write-up ("Registrar" doesn't count)
+   - Each result has a reason (e.g. "name: pizza"), shown when hovering
+     the tag on the map
+   - Also sorts events into our own categories (social, professional,
+     sports, academic, arts, other). The map no longer shows these (see Key
+     Decisions), but the rules are kept for possible later use
+   - The RSS reader now also stores each event's full write-up ("details")
+     for these clues
+
+2. Filters (map.html)
+   - Time frame: Today / Tomorrow / Next 7 days / Select a date. Events
+     that have already ended are hidden; multi-day events show on every
+     day they cover
+   - Category checkboxes: Food plus GT's 10 category names exactly as on
+     its RSS feeds page, each with a count for the chosen time frame; all
+     ticked at the start, with All / None buttons. An event shows if it has
+     any ticked category
+   - The pins and the "Not on the map" panel both follow both filters
+
+3. Event cards (map pop-ups and the panel)
+   - Name (linked to GT's event page), time range (e.g. "Wed, Oct 28,
+     11:00 AM – 4:30 PM"), location, category tags, Food and "Registration
+     required" tags
+   - Location text is shown even when it can't be matched to a building,
+     so students can find the place themselves
+   - Descriptions removed from the panel to keep it short on phones
+
+4. Layout and look
+   - GT gold (#B3A369) pins with navy (#003057) border and number, and a
+     gold category bar
+   - "Not on the map" panel on the left of the map (below it on phones)
+   - Panel sections: Online, Off campus, Location not matched/found, No
+     location listed. Vague in-person places ("Georgia Tech Campus",
+     "Off-site", "Various") now go under "Location not matched/found"
+     instead of Online
+   - The page always loads the latest events.json, so rerunning the
+     pipeline shows up on a normal reload
+
+Results (October 28, 2026)
+--------------------------
+- 225 upcoming events; every one has at least one of GT's 10 feed
+  categories, so none are hidden by the category filter
+- Events per GT category: Other/Miscellaneous 60, Training/Workshop 60,
+  Career/Professional development 46, Arts and Performance 34,
+  Seminar/Lecture/Colloquium 32, Student sponsored 13, Conference/Symposium
+  8, Sports/Athletics 6, Institute/Academic/Religious 0, Special event 0
+- Food: 13 events (10 from GT's own "Free food" tag)
+- Registration required: 91 events. A hand check on October 26 (89 of 219
+  flagged then) found 1 clearly wrong and 2 doubtful (~3%), and no misses
+- Locations: 89 pinned, 1 off campus, 34 unmatched, 72 online, 29 with no
+  location. Match rate for in-person events: 73%, down from 83% on October
+  26, partly because "Georgia Tech Campus" now counts as an unmatched
+  in-person place rather than online
+
+Key Decisions
+-------------
+- Rules, not an LLM, for categories, food, registration and locations.
+  The rules' error rate is small and measurable; an LLM would add cost and
+  randomness.
+- GT's own category names for the checkboxes (October 28). Students
+  already know the names on GT's feeds page, so our own groupings would
+  confuse them. Food stays, since GT has no food category. GT's extra tags
+  that have no feed ("Performance", "Talk", "Free", ...) are left out.
+  Empty or broken feeds still get a checkbox, so the list doesn't change
+  when GT fixes them.
+- No category colors on the map: all pins look the same, and checkboxes
+  choose what shows.
+- No time-of-day picker: a day or a range of days is enough.
+- gt_calendar_scraper.py (the old page scraper) removed from GitHub; the
+  owner keeps a local copy.
+
+Open Issues
+-----------
+- Still waiting for GT's reply about the broken/empty feeds ("Student
+  sponsored" errors, "Special event" is empty, uncategorized events are in
+  no feed). When it comes, rerun the pipeline and check the counts.
+- 34 unmatched locations: worth reviewing locate.py's list for buildings
+  to add.
+- Times are shown in the browser's time zone; correct only on a computer
+  set to Atlanta time.
+
+Key Files
+---------
+- scraper/gt_calendar_rss.py: reads the RSS feeds, writes events.json
+- locate.py: matches events to buildings, prints the match rate
+- categorize.py: food, registration and (unused) category rules
+- data/gt_buildings.json: buildings, keywords, coordinates, sources
+- map.html: the map page with filters
+
+Next Phase (Milestone 4: Automatic Updates and a Public Site)
+-------------------------------------------------------------
+- GitHub Actions job that runs the three scripts every ~6 hours
+- Deploy to Vercel, with the Maps key restricted to the deployed domain
+- A failed refresh sends an email
+- Live demo link in the README
+- See the checklist in CLAUDE.md

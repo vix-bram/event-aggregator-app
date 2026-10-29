@@ -10,7 +10,8 @@
      and the categories you're interested in. An event is shown if any
      part of it falls in the time frame and hasn't ended yet, and it has at
      least one of the ticked categories (an event can have several, e.g.
-     Arts and Food).
+     Arts and Performance and Food). The categories are GT's own, as named
+     on its RSS feeds page, plus Food.
   4. Groups those events by building, so two events in the Student Center
      become one pin with both events in its popup, instead of two pins
      stacked exactly on top of each other.
@@ -145,18 +146,34 @@
     // How long we assume an event lasts when the feed gives no end time.
     const DEFAULT_LENGTH_MS = 60 * 60 * 1000;
 
-    // Our categories, keyed as categorize.py writes them in our_categories,
-    // in the order the checkboxes show them.
-    const CATEGORIES = [
-      { key: "food",         label: "Food" },
-      { key: "social",       label: "Social" },
-      { key: "professional", label: "Professional / career" },
-      { key: "sports",       label: "Sports / recreation" },
-      { key: "academic",     label: "Academic / lecture" },
-      { key: "arts",         label: "Arts / culture" },
-      { key: "other",        label: "Other" },
+    // The checkboxes: Food (from categorize.py), then GT's own categories,
+    // named exactly as on https://calendar.gatech.edu/rss-feeds (the same
+    // names as FEEDS in gt_calendar_rss.py), so students see the labels
+    // they already know. Feeds that are empty or broken right now still get
+    // a box (with a count of 0), so the list doesn't change when GT fixes them.
+    const FOOD = "Food";
+    const GT_CATEGORIES = [
+      "Institute/Academic/Religious",
+      "Arts and Performance",
+      "Career/Professional development",
+      "Conference/Symposium",
+      "Other/Miscellaneous",
+      "Seminar/Lecture/Colloquium",
+      "Special event",
+      "Sports/Athletics",
+      "Student sponsored",
+      "Training/Workshop",
     ];
-    const CATEGORY_LABELS = Object.fromEntries(CATEGORIES.map(c => [c.key, c.label]));
+    const CATEGORIES = [FOOD, ...GT_CATEGORIES];
+
+    // The event's checkbox categories: Food if categorize.py found food,
+    // plus each of its GT categories. GT also tags some events with extra
+    // labels that have no feed (e.g. "Performance", "Talk"); those are left
+    // out, since they have no checkbox.
+    function categoriesOf(e) {
+      const gt = e.categories.filter(c => GT_CATEGORIES.includes(c));
+      return e.our_categories.includes("food") ? [FOOD, ...gt] : gt;
+    }
 
     // Building dot colors, by where the building's coordinates came from
     // (the "source" field in gt_buildings.json). Red ones are guesses that
@@ -274,15 +291,15 @@
     // "None" buttons. Calls onChange whenever a box changes.
     function buildCategoryBoxes(onChange) {
       const bar = document.getElementById("categories");
-      for (const { key, label } of CATEGORIES) {
+      for (const label of CATEGORIES) {
         const box = document.createElement("input");
         box.type = "checkbox";
-        box.value = key;
+        box.value = label;
         box.checked = true;
         box.addEventListener("change", onChange);
         const count = document.createElement("span");
         count.className = "count";
-        count.dataset.category = key;
+        count.dataset.category = label;
         const wrapper = document.createElement("label");
         wrapper.append(box, ` ${label} `, count);
         bar.append(wrapper);
@@ -307,7 +324,7 @@
     // that category (whether or not the box is ticked).
     function updateCategoryCounts(eventsInWindow) {
       for (const span of document.querySelectorAll("#categories .count")) {
-        const count = eventsInWindow.filter(e => e.our_categories.includes(span.dataset.category)).length;
+        const count = eventsInWindow.filter(e => categoriesOf(e).includes(span.dataset.category)).length;
         span.textContent = `(${count})`;
       }
     }
@@ -356,13 +373,15 @@
         item.append(where);
       }
 
-      // Tags: each of the event's categories, then registration. Hover a
-      // tag to see which rule set it, e.g. "name: concert".
+      // Tags: each of the event's categories, then registration. Hover the
+      // Food or registration tag to see which rule set it, e.g.
+      // "name: pizza".
       const tags = document.createElement("div");
       tags.className = "tags";
-      for (const category of e.our_categories) {
-        const tag = buildTag(CATEGORY_LABELS[category] ?? category, category === "food" ? "food" : "");
-        tag.title = e.category_reasons?.[category] ?? "";
+      for (const category of categoriesOf(e)) {
+        const isFood = category === FOOD;
+        const tag = buildTag(category, isFood ? "food" : "");
+        if (isFood) tag.title = e.category_reasons?.food ?? "";
         tags.append(tag);
       }
       if (e.registration_required) {
@@ -455,7 +474,7 @@
         const inWindow = happeningIn(events, timeFrame);
         updateCategoryCounts(inWindow);
         const ticked = tickedCategories();
-        const shown = inWindow.filter(e => e.our_categories.some(c => ticked.has(c)));
+        const shown = inWindow.filter(e => categoriesOf(e).some(c => ticked.has(c)));
         const pinned = shown.filter(e => e.location_status === "matched");
         const groups = groupByBuilding(pinned);
         for (const [building, buildingEvents] of Object.entries(groups)) {

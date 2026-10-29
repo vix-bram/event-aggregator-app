@@ -81,14 +81,15 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 
 **Product rule (user, 2026-10-24): users must be able to see every event GT publishes in their chosen time frame, not just the ones we can pin.** Events that are online, have no location, or whose location can't be matched (e.g. Chapin, Holland Plant, whose positions the user doesn't know) will go in a separate list in the app, showing whatever the RSS feed gives. Don't guess coordinates for unknown places to force them onto the map.
 
-**Milestone 3 (in progress, started 2026-10-26):** pipeline is now `scraper/gt_calendar_rss.py` → `locate.py` → `categorize.py` → `map.html`.
+**Milestone 3 (complete, 2026-10-28; see `milestones/milestone3_summary.txt`):** pipeline is now `scraper/gt_calendar_rss.py` → `locate.py` → `categorize.py` → `map.html`.
 
 * The RSS reader also stores `details` (the event's full write-up), used only by `categorize.py` for registration/food clues
 * `categorize.py` sets `our_categories`: every category that fits (food, social, professional, sports, academic, arts, other), with `category_reasons` naming the rule behind each. It also sets `registration_required` (register/RSVP/sign up/tickets in links, location, fee or write-up; "Registrar" doesn't match) with `registration_reason`. Name keywords catch what GT's vague tags miss. GT's broad tags (Training/Workshop, Student sponsored) count only when nothing else matched. Holidays and closures fall to `other` on purpose
 * **"Food", not "free food" (user, 2026-10-26):** whether food is free (or only for registered people) is for the student to check on the event page. Food comes from GT's "Free food" Extras tag, food words in the name, or "lunch will be served"-style phrases. The RSS reader's `free_food` field stays as GT's raw tag
 * Tickets count as "registration required" (sports games)
 * **Map design (user, 2026-10-26; colors and layout changed 2026-10-28):** no category colors. All pins are GT gold `#B3A369` with navy `#003057` border and number (as in Milestone 2); the category bar is gold too, and the "Not on the map" panel sits left of the map. Students tick category checkboxes (all ticked by default, OR logic) to choose what shows. The time frame is Today / Tomorrow / Next 7 days (starting today) / Select a date, with no time-of-day picker. Events that have already ended are hidden
-* The user has emailed GT about the missing/broken/empty feeds (2026-10-26), hoping fixed feeds give every event a GT category. When GT replies, re-run the pipeline and re-measure how many events `categorize.py` decides by name, by GT tag, or not at all. Then decide with the user whether to keep "Social": GT has no social category, so today it comes only from name keywords (all 7 such events were GT "Other/Miscellaneous"). Options: switch to GT's own label (e.g. "Student sponsored") or keep it as our own grouping
+* **Checkboxes use GT's own category names (user, 2026-10-28):** students already know the names on GT's RSS feeds page, so the filter is Food plus the 10 feed names (`GT_CATEGORIES` in `map.html`, same as `FEEDS`), read from each event's `categories` field. GT's extra tags without a feed ("Performance", "Talk", "Free", ...) are left out. Empty/broken feeds still get a box. Of `our_categories`, the map now uses only `food`; social/professional/sports/academic/arts/other are no longer shown. This settles the earlier "keep Social?" question (dropped)
+* The user has emailed GT about the missing/broken/empty feeds (2026-10-26). When GT replies, re-run the pipeline and check the counts per checkbox
 
 ## Milestone Checklists
 
@@ -109,20 +110,21 @@ Done when: `map.html` shows the next 10 events as correctly placed pins with pop
 - [x] Merge GT's duplicate postings (same name, start and location but different URLs, e.g. "Georgia Tech Volleyball vs. SMU" and "...-vs-smu-0")
 - [x] Write `milestones/milestone2_summary.txt` as complete
 
-### Milestone 3: Filters and categories
+### Milestone 3: Filters and categories (complete, 2026-10-28)
 Done when: a user can pick a time frame and categories and see only those events, on the map and in the list. (Changed by the user on 2026-10-26: originally "pick a day and time", with pins colored by category.)
 
-- [ ] Time frame filter (Today / Tomorrow / Next 7 days / a date); pins and the unmapped panel both follow it (replaces "next 10 events"). Built 2026-10-26, awaiting the user's check in the browser
-- [x] Map GT's categories to ours (food, social, professional, sports, academic, arts) with keyword rules, several per event; food from the feed's Extras field, the name or the write-up (2026-10-26, `categorize.py`)
+- [x] Time frame filter (Today / Tomorrow / Next 7 days / a date); pins and the unmapped panel both follow it (replaces "next 10 events"). Checked by the user 2026-10-28
+- [x] Map GT's categories to ours (food, social, professional, sports, academic, arts) with keyword rules, several per event; food from the feed's Extras field, the name or the write-up (2026-10-26, `categorize.py`). On 2026-10-28 the user switched the checkboxes to GT's own names; only Food is still ours, the other rules stay in `categorize.py` unused for possible later use
 - [x] Registration-required flag (e.g. from related links like "Register" / "RSVP"); measure how often the rule is wrong (2026-10-26: 89 of 219 flagged; hand check found 1 clearly wrong, 2 doubtful, ~3%; no misses found in the text of the unflagged events)
-- [ ] Category checkboxes (with counts) filter the pins and the list. Built 2026-10-26, awaiting the user's check in the browser
-- [ ] Popups show categories (including food) and registration. Built 2026-10-26, awaiting the user's check in the browser
+- [x] Category checkboxes (with counts) filter the pins and the list. Checked by the user 2026-10-28
+- [x] Popups show categories (including food) and registration. Checked by the user 2026-10-28
 - [x] Measure the unmatched locations again; decide rules vs. LLM (default: rules) (2026-10-26: 83% match rate, 18 unmatched, mostly facilities break rooms and far-off places; decision: rules, no LLM)
+- [x] Write `milestones/milestone3_summary.txt` as complete
 
 ### Milestone 4: Automatic updates and a public site
 Done when: a public URL shows events that refresh on their own every ~6 hours, and a failed refresh sends an email.
 
-- [ ] GitHub Actions job runs `gt_calendar_rss.py` + `locate.py` on a schedule (the sanity check makes a broken run fail visibly)
+- [ ] GitHub Actions job runs `gt_calendar_rss.py` + `locate.py` + `categorize.py` on a schedule (the sanity check makes a broken run fail visibly)
 - [ ] Deploy to Vercel
 - [ ] Google Maps key restricted to the deployed domain (plus localhost for development)
 - [ ] Live demo link in the README
