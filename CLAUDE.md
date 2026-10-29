@@ -126,9 +126,9 @@ Done when: a user can pick a time frame and categories and see only those events
 ### Milestone 4: Automatic updates to Firebase
 Done when: events in Firebase refresh on their own every ~6 hours, and a failed refresh sends an email.
 
-- [ ] Create the Firebase project (the user, in the browser, with Claude's steps)
-- [ ] Decide the format: a static `events.json` on Firebase (simplest for read-only data) or Firestore documents (better once there are user features like saved events, or many sources)
-- [ ] GitHub Actions job runs `gt_calendar_rss.py` + `locate.py` + `categorize.py` on a schedule and publishes the result to Firebase (the sanity check makes a broken run fail visibly; GitHub emails on failure). Firebase credentials go in GitHub Secrets, never in the repo
+- [x] Create the Firebase project (2026-10-29): project ID `gt-event-map`, added to the user's existing GCP project (the one with the Maps key), so it's on the Blaze plan. The user has a hard quota on Maps and expects Hosting to stay in the free tier
+- [x] Decide the format (2026-10-29): static `events.json` + `data/gt_buildings.json` on Firebase Hosting (`https://gt-event-map.web.app/...`). Firestore only once there are user features (saved events, accounts) or many sources
+- [ ] GitHub Actions job (`.github/workflows/refresh-events.yml`, written 2026-10-29; needs the `FIREBASE_SERVICE_ACCOUNT_GT_EVENT_MAP` secret and a first successful run) runs `gt_calendar_rss.py` + `locate.py` + `categorize.py` on a schedule and publishes the result to Firebase (the sanity check makes a broken run fail visibly; GitHub emails on failure). Firebase credentials go in GitHub Secrets, never in the repo
 - [ ] Optional: host `map.html` on Firebase Hosting as a public web version (Google Maps key restricted to that domain plus localhost)
 
 ### Milestone 5: Mobile app (Expo)

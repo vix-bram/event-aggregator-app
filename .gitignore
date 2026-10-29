@@ -11,3 +11,9 @@ events.txt
 building_loc.txt
 # Kept locally only, not published on GitHub
 scraper/gt_calendar_scraper.py
+# Built by the GitHub Actions job before deploying to Firebase
+public/
+.firebase/
+
+# Notes to understand the pipeline
+random_notes.txt
