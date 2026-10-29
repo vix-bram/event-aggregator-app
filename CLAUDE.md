@@ -6,15 +6,17 @@ Campus events at Georgia Tech are scattered across dozens of sources: department
 
 ## The Goal
 
-Build a web app that automatically scrapes publicly available Georgia Tech webpages for event information, parses it into structured data (plain code where the page is structured; an LLM only where plain code isn't enough), stores it in a database, and displays events as pins, filterable by category, on an interactive Google Maps interface of the GT campus.
+Build a mobile app, published on Google Play first and the Apple App Store later, that shows Georgia Tech events as pins, filterable by category, on an interactive map of the GT campus. Behind it, a scheduled job reads publicly available GT event sources, parses them into structured data (plain code where the source is structured; an LLM only where plain code isn't enough) and publishes them to Firebase, where the app reads them.
+
+**Decision (user, 2026-10-29):** the target changed from a web app (on Vercel) to a mobile app. The app is built with Expo (React Native), so one codebase serves Android and iOS, and EAS (Expo's cloud build service) builds the iPhone version without a Mac. Firebase replaces Vercel as the host. Everything is tested free with the Expo Go app on the user's own Android phone and iPhone (plus the Android Studio emulator on the laptop) before paying for any store account (Google Play $25 once; Apple $99/year). Build and test on both platforms from the start, but publish Android first. `map.html` stays as the working prototype and reference for the app's behavior.
 
 ## Core Features
 
 * **Automated scraping**: A scheduled job visits a list of known GT event pages on a recurring basis (e.g. every 6 hours) and extracts raw text
 * **Parsing**: Turn each source into structured event data (name, date, time, location, description, category). Structured sources like calendar.gatech.edu are parsed with plain Python; an LLM (e.g. Gemini) is reserved for messy sources or fields rules can't handle
 * **Location matching**: Free-text locations ("Room 357, Clough Undergraduate Learning Commons") are matched to a campus building with known coordinates so they can be pinned
-* **Database storage**: Parsed events are stored in Firebase so the app doesn't have to re-scrape every time a user opens it
-* **Map interface**: Events are displayed as pins on a Google Map centered on the GT campus, filterable by category with checkboxes (e.g. food, social, professional, sports)
+* **Database storage**: Parsed events are published to Firebase so the app doesn't have to re-scrape every time a user opens it
+* **Map interface**: In the mobile app, events are displayed as pins on a map centered on the GT campus, filterable by category with checkboxes (e.g. food, social, professional, sports)
 * **Time filtering**: Users can set a specific date and time to see only events happening at that time (e.g. "show me events on Thursday at 4pm")
 * **Event popups**: Tapping a pin shows a card with event details (name, time, location, description, registration required or not)
 
@@ -32,10 +34,10 @@ Build a web app that automatically scrapes publicly available Georgia Tech webpa
 
 * **Scraping**: Python with BeautifulSoup or Playwright
 * **Parsing**: Python (BeautifulSoup + JSON) for structured sources; Google Gemini API later, only if needed
-* **Database**: Firebase (Firestore)
-* **Frontend**: Plain HTML + Google Maps JavaScript API for the prototype; React later
-* **Hosting**: Vercel
-* **Scheduling**: GitHub Actions or Google Cloud Scheduler
+* **Data hosting**: Firebase (Firestore, or a static `events.json` on Firebase; decided in Milestone 4)
+* **App**: Expo (React Native) for Android and iOS, with a native map (`react-native-maps`); tested with Expo Go and the Android Studio emulator; store builds via EAS
+* **Prototype**: Plain HTML + Google Maps JavaScript API (`map.html`)
+* **Scheduling**: GitHub Actions
 
 ## Target Scrape Sources (Georgia Tech)
 
@@ -121,22 +123,41 @@ Done when: a user can pick a time frame and categories and see only those events
 - [x] Measure the unmatched locations again; decide rules vs. LLM (default: rules) (2026-10-26: 83% match rate, 18 unmatched, mostly facilities break rooms and far-off places; decision: rules, no LLM)
 - [x] Write `milestones/milestone3_summary.txt` as complete
 
-### Milestone 4: Automatic updates and a public site
-Done when: a public URL shows events that refresh on their own every ~6 hours, and a failed refresh sends an email.
+### Milestone 4: Automatic updates to Firebase
+Done when: events in Firebase refresh on their own every ~6 hours, and a failed refresh sends an email.
 
-- [ ] GitHub Actions job runs `gt_calendar_rss.py` + `locate.py` + `categorize.py` on a schedule (the sanity check makes a broken run fail visibly)
-- [ ] Deploy to Vercel
-- [ ] Google Maps key restricted to the deployed domain (plus localhost for development)
-- [ ] Live demo link in the README
+- [ ] Create the Firebase project (the user, in the browser, with Claude's steps)
+- [ ] Decide the format: a static `events.json` on Firebase (simplest for read-only data) or Firestore documents (better once there are user features like saved events, or many sources)
+- [ ] GitHub Actions job runs `gt_calendar_rss.py` + `locate.py` + `categorize.py` on a schedule and publishes the result to Firebase (the sanity check makes a broken run fail visibly; GitHub emails on failure). Firebase credentials go in GitHub Secrets, never in the repo
+- [ ] Optional: host `map.html` on Firebase Hosting as a public web version (Google Maps key restricted to that domain plus localhost)
 
-### Milestone 5: Database (Firebase)
-Done when: events are stored in Firestore and the site reads them from there.
+### Milestone 5: Mobile app (Expo)
+Done when: the app runs on the user's Android phone and iPhone through Expo Go and does what `map.html` does, with data from Firebase.
 
-- [ ] Decide first whether it's needed: for read-only data refreshed every few hours, a static `events.json` may be enough. Firestore earns its place once there are user features (saved events, accounts) or many sources
-- [ ] Firestore schema; scheduled job writes events there
-- [ ] Site reads from Firestore
+- [ ] Set up the Expo project (Node.js, Expo CLI; Android Studio emulator on the laptop; Expo Go on both phones)
+- [ ] Map of campus with event pins grouped by building, and event details on tap
+- [ ] Time frame (Today / Tomorrow / Next 7 days / a date) and category checkboxes, as in `map.html`
+- [ ] "Not on the map" list (online, unmatched, off campus, no location)
+- [ ] Loads events from Firebase; works sensibly offline or when loading fails
+- [ ] Checked by the user on both phones
 
-### Milestone 6: More sources
+### Milestone 6: Publish on Google Play
+Done when: the app is live on Google Play.
+
+- [ ] Google Play developer account ($25 once)
+- [ ] Production Android build via EAS, with its own Google Maps Android key restricted to the app
+- [ ] Privacy policy, store listing, screenshots, app icon
+- [ ] Closed test if Google still requires one for new personal accounts (was 12 testers for 14 days; check the current rule)
+- [ ] Live store link in the README
+
+### Milestone 7: Publish on the App Store
+Done when: the app is live on the Apple App Store.
+
+- [ ] Apple Developer account ($99/year)
+- [ ] iOS build via EAS (no Mac needed); map provider decided (Apple Maps by default, or Google Maps with an iOS key)
+- [ ] TestFlight test on the user's iPhone, then App Store review
+
+### Milestone 8: More sources
 Done when: events from at least one more source appear alongside the calendar's, without duplicates.
 
 - [ ] Engage (gatech.campuslabs.com): check for an official feed/API and its terms first, as with the calendar
