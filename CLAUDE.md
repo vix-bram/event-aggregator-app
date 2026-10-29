@@ -12,7 +12,7 @@ Build a mobile app, published on Google Play first and the Apple App Store later
 
 ## Core Features
 
-* **Automated scraping**: A scheduled job visits a list of known GT event pages on a recurring basis (e.g. every 6 hours) and extracts raw text
+* **Automated scraping**: A scheduled job visits a list of known GT event pages once a day (10:00 UTC, early morning in Atlanta; changed from every 6 hours by the user on 2026-10-29) and extracts raw text
 * **Parsing**: Turn each source into structured event data (name, date, time, location, description, category). Structured sources like calendar.gatech.edu are parsed with plain Python; an LLM (e.g. Gemini) is reserved for messy sources or fields rules can't handle
 * **Location matching**: Free-text locations ("Room 357, Clough Undergraduate Learning Commons") are matched to a campus building with known coordinates so they can be pinned
 * **Database storage**: Parsed events are published to Firebase so the app doesn't have to re-scrape every time a user opens it
@@ -124,12 +124,14 @@ Done when: a user can pick a time frame and categories and see only those events
 - [x] Write `milestones/milestone3_summary.txt` as complete
 
 ### Milestone 4: Automatic updates to Firebase
-Done when: events in Firebase refresh on their own every ~6 hours, and a failed refresh sends an email.
+Done when: events in Firebase refresh on their own once a day, and a failed refresh sends an email.
 
 - [x] Create the Firebase project (2026-10-29): project ID `gt-event-map`, added to the user's existing GCP project (the one with the Maps key), so it's on the Blaze plan. The user has a hard quota on Maps and expects Hosting to stay in the free tier
 - [x] Decide the format (2026-10-29): static `events.json` + `data/gt_buildings.json` on Firebase Hosting (`https://gt-event-map.web.app/...`). Firestore only once there are user features (saved events, accounts) or many sources
-- [ ] GitHub Actions job (`.github/workflows/refresh-events.yml`, written 2026-10-29; needs the `FIREBASE_SERVICE_ACCOUNT_GT_EVENT_MAP` secret and a first successful run) runs `gt_calendar_rss.py` + `locate.py` + `categorize.py` on a schedule and publishes the result to Firebase (the sanity check makes a broken run fail visibly; GitHub emails on failure). Firebase credentials go in GitHub Secrets, never in the repo
-- [ ] Optional: host `map.html` on Firebase Hosting as a public web version (Google Maps key restricted to that domain plus localhost)
+- [x] GitHub Actions job (`.github/workflows/refresh-events.yml`; first successful manual run 2026-10-29, events visible at `https://gt-event-map.web.app/events.json`). It deploys as service account `github-deploy`, whose JSON key is the `FIREBASE_SERVICE_ACCOUNT_GT_EVENT_MAP` secret, with roles Firebase Hosting Admin + Service Usage Consumer (without the second, the deploy fails with 403 on `serviceusage.services.get`). The job runs `gt_calendar_rss.py` + `locate.py` + `categorize.py` on a schedule and publishes the result to Firebase (the sanity check makes a broken run fail visibly; GitHub emails on failure). Firebase credentials go in GitHub Secrets, never in the repo
+- [x] GitHub's failure emails are on (GitHub → Settings → Notifications → Actions; done by the user 2026-10-29)
+- [ ] Confirm a scheduled (not manual) run succeeds
+- Dropped (user, 2026-10-29): hosting `map.html` as a public web version. The phone app is the product; `map.html` stays a local prototype
 
 ### Milestone 5: Mobile app (Expo)
 Done when: the app runs on the user's Android phone and iPhone through Expo Go and does what `map.html` does, with data from Firebase.

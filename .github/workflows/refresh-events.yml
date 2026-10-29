@@ -1,4 +1,4 @@
-# Refreshes the event data every 6 hours and publishes it on Firebase Hosting:
+# Refreshes the event data once a day and publishes it on Firebase Hosting:
 #   https://gt-event-map.web.app/events.json
 #   https://gt-event-map.web.app/data/gt_buildings.json
 #
@@ -7,13 +7,14 @@
 # repo owner about the failed run.
 #
 # Needs the repository secret FIREBASE_SERVICE_ACCOUNT_GT_EVENT_MAP: the JSON
-# key of a Google Cloud service account with the "Firebase Hosting Admin" role.
+# key of a Google Cloud service account with the roles "Firebase Hosting Admin"
+# and "Service Usage Consumer" (the deploy first checks that Hosting is on).
 
 name: Refresh events
 
 on:
   schedule:
-    - cron: "0 */6 * * *"  # 00:00, 06:00, 12:00, 18:00 UTC
+    - cron: "0 10 * * *"  # 10:00 UTC = 6 AM in Atlanta (5 AM in winter)
   workflow_dispatch:        # "Run workflow" button on the Actions tab
 
 concurrency:
@@ -25,9 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
