@@ -1,0 +1,105 @@
+MILESTONE 5 SUMMARY
+===================
+
+Status: In progress. Started November 5, 2026.
+
+Objective
+---------
+Turn map.html into a phone app. It does the same job, but runs on an Android
+phone and an iPhone and reads its data from Firebase instead of local files.
+
+Done when: the app runs on the owner's Android phone and iPhone through Expo
+Go and does what map.html does, with data from Firebase.
+
+Words Used Here
+---------------
+- Expo: a toolkit for building phone apps in JavaScript/TypeScript. One
+  codebase serves both Android and iPhone.
+- React Native: what Expo is built on. It turns our code into real phone
+  screens and buttons, rather than a web page.
+- Expo Go: a phone app that runs our project while we build it, so we don't
+  need to make a full app build for every change.
+- SDK: the bundle of Expo tools for one release. We are on SDK 58. The
+  project and Expo Go must be on the same SDK.
+- Dev server: a program on the laptop (started by "npx expo start") that
+  sends our code to the phone. The QR code tells the phone where to find it.
+- Emulator: a pretend Android phone in a window on the laptop.
+- Node.js: runs JavaScript on the laptop, outside a browser. Expo's tools
+  are written in JavaScript, so they need it.
+- npm / npx: npm installs JavaScript packages. npx runs a tool from a package.
+- Package: code someone else wrote that we reuse. Installed packages go in
+  app/node_modules.
+
+Steps Taken So Far, and Why
+---------------------------
+
+1. Checked what was already on the laptop
+   Why: to install only what was missing. Node.js and Android Studio were
+   not there; Git and winget (Windows' installer) were.
+
+2. Installed Node.js LTS with winget
+   Why: Expo's tools need it. LTS is the long-term support version, meant
+   to be stable.
+
+3. Created the project with "npx create-expo-app@latest app"
+   Why: it generates a working starter app, so we begin from something that
+   runs. It lives in its own app/ folder, separate from the Python pipeline.
+   "@latest" gives the newest SDK, here 58.
+
+4. Installed the packages with "npm install"
+   Why: the starter app lists the packages it needs in package.json, and
+   this downloads them (572 packages). node_modules is not put on GitHub
+   because it is large and can be rebuilt from package.json and
+   package-lock.json.
+
+5. Ran the health check with "npx expo-doctor"
+   Why: it finds version conflicts and setup problems early. 20 of 20 checks
+   passed.
+
+6. Test-compiled for both platforms with "npx expo export"
+   Why: to prove the code builds for Android and iPhone before bringing a
+   phone into it. Both succeeded, so a later problem on a phone is more
+   likely the connection than the code.
+
+7. Started installing Android Studio
+   Why: it provides the Android emulator, for testing without picking up a
+   phone. Not needed for the iPhone. The first attempt failed when the
+   network dropped, so it was started again.
+
+8. Read Expo's current docs for maps and Expo Go
+   Why: Expo changes with each SDK, and the plan relied on assumptions about
+   Expo Go. This found the iPhone question under Open Issues.
+
+9. Committed the app/ folder to GitHub
+   Why: so the work is saved and its history can be reviewed.
+
+Steps Still To Do
+-----------------
+- Connect the iPhone: install Expo Go and sign in to a free Expo account.
+  Why: Expo Go on a real iPhone only opens a project when it and the laptop
+  are signed in to the same account.
+- Finish the emulator setup. Why: same testing, without a phone.
+- Connect the Android phone when it's available.
+- Add the map with react-native-maps. Why: Expo's SDK 58 docs list it as
+  included in Expo Go with no extra setup.
+- Load the real events from Firebase and show the pins.
+- Add the time frame and category filters.
+- Add the "Not on the map" list.
+- Save the last good data on the phone, for when it is offline.
+- Have the owner check it on both phones.
+
+Open Issues
+-----------
+- Can a free iPhone setup run SDK 58? The sources disagree. Expo's
+  troubleshooting page says Expo Go on the App Store stops at SDK 54, and
+  that newer projects need a TestFlight build of Expo Go, which needs the
+  paid Apple Developer Program ($99/year). But Apple's App Store data on
+  November 5 lists Expo Go 58.0.5 as free, with the note "This version adds
+  support for SDK 58". Trying the free App Store version will settle it.
+
+Key Files
+---------
+- app/package.json: the packages the app uses, and the Expo version
+- app/app.json: the app's settings (name, icons, ...)
+- app/src/app/: the app's screens. Each file here is a screen
+- app/AGENTS.md: Expo's notes for AI coding assistants
