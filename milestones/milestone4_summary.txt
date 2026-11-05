@@ -1,0 +1,92 @@
+MILESTONE 4 SUMMARY
+===================
+
+Status: Complete (November 5, 2026). Started October 29, 2026.
+
+Objective
+---------
+Keep the event data fresh without anyone running anything: refresh it once
+a day and publish it online, where the future phone app can read it.
+
+Done when: events in Firebase refresh on their own once a day, and a failed
+refresh sends an email. The daily refresh is proven by 7 scheduled runs in a
+row. The failure email is switched on but has never fired, because no run
+has failed yet (see Open Issues).
+
+What Was Accomplished
+---------------------
+
+1. Firebase project
+   - Project ID gt-event-map, added to the existing Google Cloud project
+     that holds the Maps key, so it is on the Blaze plan
+   - Hosting is expected to stay within the free tier
+
+2. Scheduled job (.github/workflows/refresh-events.yml)
+   - Runs once a day, and can also be started by hand with the "Run
+     workflow" button on GitHub's Actions tab
+   - Steps: gt_calendar_rss.py -> locate.py -> categorize.py -> copy the
+     results to public/ -> deploy to Firebase Hosting
+   - If any step fails, for example the RSS reader's sanity check finds no
+     events, nothing is deployed and the old data stays online
+
+3. Published data
+   - https://gt-event-map.web.app/events.json
+   - https://gt-event-map.web.app/data/gt_buildings.json
+   - firebase.json lets browsers cache these for 5 minutes and allows them
+     to be read from other sites
+
+4. Credentials
+   - The job deploys as the service account github-deploy, with the roles
+     Firebase Hosting Admin and Service Usage Consumer. Without the second
+     role, the deploy fails with a 403 error on serviceusage.services.get
+   - Its key is stored in the GitHub secret
+     FIREBASE_SERVICE_ACCOUNT_GT_EVENT_MAP, never in the repo
+
+5. Failure emails
+   - Turned on by the owner in GitHub (Settings -> Notifications -> Actions)
+
+Results (November 5, 2026)
+--------------------------
+- 8 runs, all successful: 1 manual on October 29 and 7 scheduled, one each
+  day from October 30 to November 5
+- Scheduled runs started 5.7 to 10.2 hours after the 10:00 UTC set in the
+  job, between 15:41 and 20:11 UTC (late morning to mid afternoon in
+  Atlanta)
+- Live data after today's run: 181 upcoming events and 58 buildings
+- Locations: 76 pinned, 30 unmatched, 53 online, 22 with no location. Match
+  rate for in-person events: 72%
+- Food: 14 events. Registration required: 65 events
+
+Key Decisions
+-------------
+- Mobile app instead of a web app (October 29). Firebase replaces Vercel as
+  the host. The original Milestone 4 included a public site; that part was
+  dropped, and map.html stays a local prototype.
+- Static files on Firebase Hosting, not Firestore. The app only needs to
+  read two files. Firestore can wait until there are user features (saved
+  events, accounts) or many sources.
+- Refresh once a day, not every 6 hours (October 29).
+
+Open Issues
+-----------
+- The failure email has not been seen in practice, since no run has failed.
+- GitHub starts the scheduled runs hours late. Nothing has been missed, but
+  the data for "today" may not be refreshed until around midday in Atlanta.
+- Still waiting for GT's reply about the broken/empty feeds and the list of
+  buildings.
+- README.md still describes the old plan (Vercel, a live demo link).
+
+Key Files
+---------
+- .github/workflows/refresh-events.yml: the daily job
+- firebase.json: what Hosting serves, and its cache and access headers
+- .firebaserc: links this repo to the gt-event-map project
+
+Next Phase (Milestone 5: Mobile App with Expo)
+----------------------------------------------
+- Expo project, tested on the owner's Android phone and iPhone through
+  Expo Go, plus the Android Studio emulator
+- Map with pins, time frame and category filters, and the "Not on the map"
+  list, as in map.html
+- Loads events from Firebase and copes with being offline
+- See the checklist in CLAUDE.md

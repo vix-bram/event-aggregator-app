@@ -114,7 +114,7 @@ Key Files
 
 Next Phase (Milestone 4: Automatic Updates and a Public Site)
 -------------------------------------------------------------
-- GitHub Actions job that runs the three scripts every ~6 hours
+- GitHub Actions job that runs the three scripts every ~24 hours
 - Deploy to Vercel, with the Maps key restricted to the deployed domain
 - A failed refresh sends an email
 - Live demo link in the README

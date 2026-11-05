@@ -91,7 +91,9 @@ Build a mobile app, published on Google Play first and the Apple App Store later
 * Tickets count as "registration required" (sports games)
 * **Map design (user, 2026-10-26; colors and layout changed 2026-10-28):** no category colors. All pins are GT gold `#B3A369` with navy `#003057` border and number (as in Milestone 2); the category bar is gold too, and the "Not on the map" panel sits left of the map. Students tick category checkboxes (all ticked by default, OR logic) to choose what shows. The time frame is Today / Tomorrow / Next 7 days (starting today) / Select a date, with no time-of-day picker. Events that have already ended are hidden
 * **Checkboxes use GT's own category names (user, 2026-10-28):** students already know the names on GT's RSS feeds page, so the filter is Food plus the 10 feed names (`GT_CATEGORIES` in `map.html`, same as `FEEDS`), read from each event's `categories` field. GT's extra tags without a feed ("Performance", "Talk", "Free", ...) are left out. The empty Special event feed has no box since 2026-10-29; add it back when GT fixes it. Student sponsored keeps its box although its feed is broken, because events from other feeds carry that tag (13 on 2026-10-29). "Arts and Performance" is shown as "Arts & Performance" (`DISPLAY_NAMES`; `events.json` keeps GT's name). Of `our_categories`, the map now uses only `food`; social/professional/sports/academic/arts/other are no longer shown. This settles the earlier "keep Social?" question (dropped)
-* The user has emailed GT about the missing/broken/empty feeds (2026-10-26). When GT replies, re-run the pipeline and check the counts per checkbox
+* The user has emailed GT about the missing/broken/empty feeds (2026-10-26). No reply yet; follow-up email sent 2026-11-05, and the user plans to call on 2026-11-06. When GT replies, re-run the pipeline and check the counts per checkbox
+
+**Milestone 4 (complete, 2026-11-05; see `milestones/milestone4_summary.txt`):** a daily GitHub Actions job runs the pipeline and publishes `events.json` and `data/gt_buildings.json` to `https://gt-event-map.web.app/`. The failure email is switched on but hasn't fired yet, because no run has failed.
 
 ## Milestone Checklists
 
@@ -123,20 +125,20 @@ Done when: a user can pick a time frame and categories and see only those events
 - [x] Measure the unmatched locations again; decide rules vs. LLM (default: rules) (2026-10-26: 83% match rate, 18 unmatched, mostly facilities break rooms and far-off places; decision: rules, no LLM)
 - [x] Write `milestones/milestone3_summary.txt` as complete
 
-### Milestone 4: Automatic updates to Firebase
+### Milestone 4: Automatic updates to Firebase (complete, 2026-11-05)
 Done when: events in Firebase refresh on their own once a day, and a failed refresh sends an email.
 
 - [x] Create the Firebase project (2026-10-29): project ID `gt-event-map`, added to the user's existing GCP project (the one with the Maps key), so it's on the Blaze plan. The user has a hard quota on Maps and expects Hosting to stay in the free tier
 - [x] Decide the format (2026-10-29): static `events.json` + `data/gt_buildings.json` on Firebase Hosting (`https://gt-event-map.web.app/...`). Firestore only once there are user features (saved events, accounts) or many sources
 - [x] GitHub Actions job (`.github/workflows/refresh-events.yml`; first successful manual run 2026-10-29, events visible at `https://gt-event-map.web.app/events.json`). It deploys as service account `github-deploy`, whose JSON key is the `FIREBASE_SERVICE_ACCOUNT_GT_EVENT_MAP` secret, with roles Firebase Hosting Admin + Service Usage Consumer (without the second, the deploy fails with 403 on `serviceusage.services.get`). The job runs `gt_calendar_rss.py` + `locate.py` + `categorize.py` on a schedule and publishes the result to Firebase (the sanity check makes a broken run fail visibly; GitHub emails on failure). Firebase credentials go in GitHub Secrets, never in the repo
 - [x] GitHub's failure emails are on (GitHub → Settings → Notifications → Actions; done by the user 2026-10-29)
-- [ ] Confirm a scheduled (not manual) run succeeds
+- [x] Confirm a scheduled (not manual) run succeeds (2026-11-05: 7 scheduled runs in a row succeeded, Oct 30 to Nov 5; GitHub starts them 6-10 hours after the 10:00 UTC set in the job)
 - Dropped (user, 2026-10-29): hosting `map.html` as a public web version. The phone app is the product; `map.html` stays a local prototype
 
 ### Milestone 5: Mobile app (Expo)
 Done when: the app runs on the user's Android phone and iPhone through Expo Go and does what `map.html` does, with data from Firebase.
 
-- [ ] Set up the Expo project (Node.js, Expo CLI; Android Studio emulator on the laptop; Expo Go on both phones)
+- [ ] Set up the Expo project (Node.js, Expo CLI; Android Studio emulator on the laptop; Expo Go on both phones). In progress: Node.js installed and project created in `app/` (Expo SDK 58, 2026-11-05). Open question: Expo's docs say App Store Expo Go stops at SDK 54 (newer needs a paid Apple account), but Apple's listing shows a free Expo Go 58.0.5 with SDK 58 support; see `milestones/milestone5_summary.txt`. Expo Go on a real iPhone also needs the same free Expo account signed in on the phone and in the CLI (`npx expo login`)
 - [ ] Map of campus with event pins grouped by building, and event details on tap
 - [ ] Time frame (Today / Tomorrow / Next 7 days / a date) and category checkboxes, as in `map.html`
 - [ ] "Not on the map" list (online, unmatched, off campus, no location)
